@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+    /* set the CSS */
+
+    .line {
+        fill: none;
+        stroke: steelblue;
+        stroke-width: 2px;
+    }
+</style>
+
+<body>
+
+    <!-- load the d3.js library -->
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+
+    <div id="chart"></div>
+    <p id="val"></p>
+    
+
+    <script>
+        var data = []
+
+        // set the dimensions and margins of the graph
+        var margin = {top: 20, right: 20, bottom: 30, left: 50 };
+        var width = 960 - margin.left - margin.right;
+        var height = 500 - margin.top - margin.bottom;
+
+        // append the svg obgect to the body of the page
+        // appends a 'group' element to 'svg'
+        // moves the 'group' element to the top left margin
+        var svg = d3.select("#chart").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        
+
+        // set the ranges
+        var x = d3.scaleTime().range([0, width]);
+        var y = d3.scaleLinear().range([height, 0]);
+        
+        // define the line
+        var valueline = d3.line()
+            .x(function (d) {
+               return x(d.date);
+            })
+            .y(function (d) {
+               return y(d.value);
+            });
+
+        // Add the X Axis
+        svg.append("g")
+            .attr("id", "xaxis")
+            .attr("transform", "translate(0," + height + ")")
+
+        // Add the Y Axis
+        svg.append("g")
+            .attr("id", "yaxis")
+        
+        // Add the valueline path.
+        svg.append("path")
+            .data([data])
+            .attr('id', 'chartline')
+            .attr("class", "line")
+            .attr("d", valueline);
+
+        function render() {
+
+            // Scale the range of the data
+            x.domain(d3.extent(data, function (d) {
+                return d.date;
+            }));
+            y.domain([0, d3.max(data, function (d) {
+                return d.value;
+            })]);
+
+            //Update x axis
+            svg.select("#xaxis")
+                .attr("id", "xaxis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(x));
+
+            //Update y axis
+            svg.select("#yaxis")
+                .attr("id", "yaxis")
+                .call(d3.axisLeft(y));
+
+            // Add the valueline path.
+            svg.select("#chartline")
+                .data([data])
+                .attr("class", "line")
+                .attr("d", valueline);
+        }
+        
+        function newVal() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', 'getval', true);
+            xhr.send();
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+
+                    var today = new Date();
+                    var time = today.getHours() + ":" + today.getMinutes() + ":" + ("0" + today.getUTCSeconds()).slice(-2); 
+
+                    document.getElementById("val").innerHTML = document.getElementById("val").innerHTML + "(" + time  + ", &ensp;" + xhr.response + ")" + "<br/>";
+
+                    data.push({
+                        date: Date.now(),
+                        value: parseInt(xhr.response)
+                    });
+
+                    console.log(data);
+
+                    render();
+                }
+            }
+        }
+
+        newVal();
+
+        setInterval(newVal, 10000);
+    </script>
+</body>
