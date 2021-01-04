@@ -1,0 +1,45 @@
+version: '3'
+    
+services:
+
+  web:
+    build: ./app
+
+    command: bash -c "python manage.py migrate --noinput -v 1 && 
+                      echo MIGRATE_FIN &&
+                      python manage.py check &&
+                      echo CHECK_FIN &&
+                      python manage.py collectstatic --noinput &&
+                       echo STATIC_FIN &&
+                      gunicorn trading_dashboard.wsgi:application --bind 0.0.0.0:8000"
+                      
+                      #tail -F anything"
+                      #gunicorn eomf.wsgi:application --bind 0.0.0.0:8000"
+                      #python manage.py runserver 0.0.0.0:8000"
+                      #python manage.py makemigrations --empty pages &&
+
+    volumes:
+      - ./app:/code
+    expose:
+      - 8000            
+    env_file:
+      - ./.env
+
+
+  nginx:
+    build:
+      context: .
+      dockerfile: ./nginx/Dockerfile
+
+    #TODO: Figure out how to avoid containers running as root
+    #user: eomfuser
+
+    #TODO: Nginx NEEDS this link to the active files because media files are added during runtime, after docker's copy command. Thus the container doesn't have the new media files.
+    volumes: 
+      - .:/code
+
+    ports:
+      - 80:80
+    depends_on:
+      - web
+
