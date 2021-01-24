@@ -1,0 +1,23 @@
+services: 
+  db:
+    image: postgres
+
+    ports:
+      - 5432:5432
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    env_file:
+      - ./.env.db
+
+    networks:
+      - shared
+
+volumes:
+  postgres_data:
+    
+networks:
+  shared: 
+    external:
+      name: shared
