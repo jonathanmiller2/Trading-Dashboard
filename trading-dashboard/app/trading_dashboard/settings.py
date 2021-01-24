@@ -20,7 +20,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'h^)i@agcpq4%gu=s^w6#2+3yi2%&lqxv83kk-_#lo&y9ehtk$z'
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", default="???"),
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -77,9 +77,13 @@ WSGI_APPLICATION = 'trading_dashboard.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
+        'ENGINE': os.environ.get("SQL_ENGINE", default="db"),
+        'HOST': os.environ.get("SQL_HOST", default="db"),
+        'NAME': os.environ.get("SQL_DATABASE", default="trading"),
+        'USER': os.environ.get("SQL_USER", default="trading"),
+        'PASSWORD': os.environ.get("SQL_PASSWORD", default="password"),
+        "PORT": os.environ.get("SQL_PORT", "5432")
+    },
 }
 
 
