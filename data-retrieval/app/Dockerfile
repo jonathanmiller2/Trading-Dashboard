@@ -6,17 +6,19 @@ ENV PYTHONUNBUFFERED 1
 WORKDIR /code
 COPY . .
 
-RUN python /code/create_db.py
-
-ADD crontab /etc/cron.d/hello-cron
-RUN chmod 0644 /etc/cron.d/hello-cron
-RUN touch /var/log/cron.log
-
-#Install dependencies
-RUN apt-get update
-RUN apt-get -y install cron
-
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
+COPY crontab /etc/cron.d/cron-python
+RUN chmod 0644 /etc/cron.d/cron-python
+RUN touch /var/log/cron.log
+
+RUN apt-get update
+RUN apt-get -y install cron
+RUN crontab /etc/cron.d/cron-python
 CMD cron && tail -f /var/log/cron.log
+
+
+
+
+

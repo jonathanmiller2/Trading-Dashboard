@@ -5,17 +5,11 @@ services:
   web:
     build: ./app
 
-    command: bash -c "python manage.py migrate --noinput -v 1"
-
-    env_file:
-      - ./.env
-
     networks:
       - shared
+
     volumes:
       - ./app:/code         
-    depends_on:
-      - db
 
 networks:
   shared: 

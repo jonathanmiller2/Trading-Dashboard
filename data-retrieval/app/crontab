@@ -1,1 +1,2 @@
-* * * * * python /code/scripts/pop_db_test.py
+* * * * * /usr/local/bin/python /code/scripts/pop_db_test.py >> /var/log/cron.log 2>&1
+# cron requires blank last line
