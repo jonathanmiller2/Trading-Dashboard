@@ -19,5 +19,5 @@ from django.urls import include, path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('randapi/', include('trading_dashboard.randapi.urls'))
+    path('data_display/', include('trading_dashboard.data_display.urls'))
 ]

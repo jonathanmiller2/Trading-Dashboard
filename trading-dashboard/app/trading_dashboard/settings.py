@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'trading_dashboard.randapi'
+    'trading_dashboard.data_display'
 ]
 
 MIDDLEWARE = [
