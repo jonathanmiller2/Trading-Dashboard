@@ -101,15 +101,15 @@
 
             xhr.onreadystatechange = function () {
                 if (xhr.readyState == 4 && xhr.status == 200) {
+                    jsonresponse = JSON.parse(xhr.response);
+                    time = jsonresponse[0].fields.timestamp;
+                    val = jsonresponse[0].fields.val;
 
-                    var today = new Date();
-                    var time = today.getHours() + ":" + today.getMinutes() + ":" + ("0" + today.getUTCSeconds()).slice(-2); 
-
-                    document.getElementById("val").innerHTML = document.getElementById("val").innerHTML + "(" + time  + ", &ensp;" + xhr.response + ")" + "<br/>";
+                    document.getElementById("val").innerHTML = document.getElementById("val").innerHTML + "(" + time  + ", &ensp;" + val + ")" + "<br/>";
 
                     data.push({
-                        date: Date.now(),
-                        value: parseInt(xhr.response)
+                        date: Date.parse(time),
+                        value: parseInt(val)
                     });
 
                     console.log(data);
@@ -121,6 +121,6 @@
 
         newVal();
 
-        setInterval(newVal, 10000);
+        setInterval(newVal, 60000);
     </script>
 </body>
