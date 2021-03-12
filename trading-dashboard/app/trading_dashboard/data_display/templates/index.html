@@ -1,5 +1,7 @@
-<!DOCTYPE html>
-<meta charset="utf-8">
+{% extends "base.html" %}
+
+{% block content %}
+
 <style>
     /* set the CSS */
 
@@ -10,117 +12,143 @@
     }
 </style>
 
-<body>
-
-    <!-- load the d3.js library -->
-    <script src="https://d3js.org/d3.v6.min.js"></script>
+<div class="ml-3">
+    <div class="btn-toolbar ml-5 mt-5">
+        <div id="chart-period-group" class="btn-group mx-2">
+            <button type="button" class="btn btn-sm btn-secondary" data-hours=1>1H</button>
+            <button type="button" class="btn btn-sm btn-secondary" data-hours=3>3H</button>
+            <button type="button" class="btn btn-sm btn-secondary" data-hours=24>1D</button>
+            <button type="button" class="btn btn-sm btn-secondary" data-hours=120>5D</button>
+            <button type="button" class="btn btn-sm btn-secondary" data-hours=720>1M</button>
+            <button type="button" class="btn btn-sm btn-secondary" data-hours=2160>3M</button>
+            <button type="button" class="btn btn-sm btn-secondary" data-hours=4320>6M</button>
+            <button type="button" class="btn btn-sm btn-secondary" data-hours=8760>1Y</button>
+            <button type="button" class="btn btn-sm btn-secondary" data-hours=17520>2Y</button>
+            <button type="button" class="btn btn-sm btn-secondary" data-hours=43800>5Y</button>
+        </div>
+    </div>
 
     <div id="chart"></div>
-    <p id="val"></p>
+    <p id="val" class="ml-5"></p>
+</div>
+
+<script>
+    var data = []
+    // set the dimensions and margins of the graph
+    var margin = {top: 20, right: 20, bottom: 30, left: 50 };
+    var width = 960 - margin.left - margin.right;
+    var height = 500 - margin.top - margin.bottom;
+    // append the svg obgect to the body of the page
+    // appends a 'group' element to 'svg'
+    // moves the 'group' element to the top left margin
+    var svg = d3.select("#chart").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
     
+    // set the ranges
+    var x = d3.scaleTime().range([0, width]);
+    var y = d3.scaleLinear().range([height, 0]);
+    
+    // define the line
+    var valueline = d3.line()
+        .x(function (d) {
+           return x(d.date);
+        })
+        .y(function (d) {
+           return y(d.value);
+        });
+    // Add the X Axis
+    svg.append("g")
+        .attr("id", "xaxis")
+        .attr("transform", "translate(0," + height + ")")
+    // Add the Y Axis
+    svg.append("g")
+        .attr("id", "yaxis")
+    
+    // Add the valueline path.
+    svg.append("path")
+        .data([data])
+        .attr('id', 'chartline')
+        .attr("class", "line")
+        .attr("d", valueline);
 
-    <script>
-        var data = []
-
-        // set the dimensions and margins of the graph
-        var margin = {top: 20, right: 20, bottom: 30, left: 50 };
-        var width = 960 - margin.left - margin.right;
-        var height = 500 - margin.top - margin.bottom;
-
-        // append the svg obgect to the body of the page
-        // appends a 'group' element to 'svg'
-        // moves the 'group' element to the top left margin
-        var svg = d3.select("#chart").append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-            .append("g")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-        
-
-        // set the ranges
-        var x = d3.scaleTime().range([0, width]);
-        var y = d3.scaleLinear().range([height, 0]);
-        
-        // define the line
-        var valueline = d3.line()
-            .x(function (d) {
-               return x(d.date);
-            })
-            .y(function (d) {
-               return y(d.value);
-            });
-
-        // Add the X Axis
-        svg.append("g")
+    function render() {
+        // Scale the range of the data
+        x.domain(d3.extent(data, function (d) {
+            return d.date;
+        }));
+        y.domain([0, d3.max(data, function (d) {
+            return d.value;
+        })]);
+        //Update x axis
+        svg.select("#xaxis")
             .attr("id", "xaxis")
             .attr("transform", "translate(0," + height + ")")
-
-        // Add the Y Axis
-        svg.append("g")
+            .call(d3.axisBottom(x));
+        //Update y axis
+        svg.select("#yaxis")
             .attr("id", "yaxis")
-        
+            .call(d3.axisLeft(y));
         // Add the valueline path.
-        svg.append("path")
+        svg.select("#chartline")
             .data([data])
-            .attr('id', 'chartline')
             .attr("class", "line")
             .attr("d", valueline);
+    }
+    
+    function newVal() {
+        $.ajax({
+            url: "get_newest_val",
+            type: "get",
+            success: function(response) {
+                jsonresponse = JSON.parse(response);
+                time = new Date(jsonresponse[0].fields.timestamp+'Z');
+                val = jsonresponse[0].fields.val;
+                document.getElementById("val").innerHTML = document.getElementById("val").innerHTML + "(" + time  + ", &ensp;" + val + ")" + "<br/>";
+                data.push({
+                    date: time,
+                    value: parseInt(val)
+                });
+                console.log(data);
+                render();
+            }
+        });
+    }
+    newVal();
+    setInterval(newVal, 60000);
 
-        function render() {
 
-            // Scale the range of the data
-            x.domain(d3.extent(data, function (d) {
-                return d.date;
-            }));
-            y.domain([0, d3.max(data, function (d) {
-                return d.value;
-            })]);
+    $('#chart-period-group').children().each(function () {
+        $(this).click(function() {
+            let period = $(event.target).data('hours');
 
-            //Update x axis
-            svg.select("#xaxis")
-                .attr("id", "xaxis")
-                .attr("transform", "translate(0," + height + ")")
-                .call(d3.axisBottom(x));
-
-            //Update y axis
-            svg.select("#yaxis")
-                .attr("id", "yaxis")
-                .call(d3.axisLeft(y));
-
-            // Add the valueline path.
-            svg.select("#chartline")
-                .data([data])
-                .attr("class", "line")
-                .attr("d", valueline);
-        }
-        
-        function newVal() {
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', 'getval', true);
-            xhr.send();
-
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState == 4 && xhr.status == 200) {
-                    jsonresponse = JSON.parse(xhr.response);
-                    time = jsonresponse[0].fields.timestamp;
-                    val = jsonresponse[0].fields.val;
-
-                    document.getElementById("val").innerHTML = document.getElementById("val").innerHTML + "(" + time  + ", &ensp;" + val + ")" + "<br/>";
-
-                    data.push({
-                        date: Date.parse(time),
-                        value: parseInt(val)
+            $.ajax({
+                url: "get_historical_vals",
+                type: "get",
+                data: {
+                    period: period
+                },
+                success: function(response) {
+                    data = []
+                    jsonresponse = JSON.parse(response);
+                    document.getElementById("val").innerHTML = "";
+                    jsonresponse.forEach(point => {
+                        time = new Date(point.fields.timestamp+'Z');
+                        val = point.fields.val;
+                        data.push({
+                            date: time,
+                            value: parseInt(val)
+                        });
+                        document.getElementById("val").innerHTML = document.getElementById("val").innerHTML + "(" + time  + ", &ensp;" + val + ")" + "<br/>";
                     });
-
                     console.log(data);
-
                     render();
                 }
-            }
-        }
+            });
+        });
+    });
+</script>
 
-        newVal();
-
-        setInterval(newVal, 60000);
-    </script>
-</body>
+{% endblock %}
