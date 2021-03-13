@@ -29,15 +29,17 @@
     </div>
 
     <div id="chart"></div>
+    
     <p id="val" class="ml-5"></p>
 </div>
 
 <script>
     var data = []
     // set the dimensions and margins of the graph
-    var margin = {top: 20, right: 20, bottom: 30, left: 50 };
+    var margin = {top: 10, right: 10, bottom: 30, left: 50 };
     var width = 960 - margin.left - margin.right;
     var height = 500 - margin.top - margin.bottom;
+
     // append the svg obgect to the body of the page
     // appends a 'group' element to 'svg'
     // moves the 'group' element to the top left margin
@@ -47,55 +49,92 @@
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
     
+    // Add a path rectangle around the chart, such that nothing shows beyond the chart bounds when panning
+    svg.append("clipPath")
+        .attr("id", "clip-1")
+    .append("rect")
+        .attr("width", width)
+        .attr("height", height);
+    
+    // Add a rectangle to the svg to trigger zoom events
+    var rect = svg.append("rect")
+        .attr("width", width)
+        .attr("height", height)
+        .style("fill", "none")
+        .style("pointer-events", "all");
+
     // set the ranges
     var x = d3.scaleTime().range([0, width]);
     var y = d3.scaleLinear().range([height, 0]);
     
-    // define the line
-    var valueline = d3.line()
-        .x(function (d) {
-           return x(d.date);
-        })
-        .y(function (d) {
-           return y(d.value);
-        });
     // Add the X Axis
     svg.append("g")
         .attr("id", "xaxis")
         .attr("transform", "translate(0," + height + ")")
+
     // Add the Y Axis
     svg.append("g")
         .attr("id", "yaxis")
     
+    // define the line
+    valueline = (given_data, given_x_function) => d3.line()
+        .curve(d3.curveStepAfter)
+        .x(d => given_x_function(d.date))
+        .y(d => y(d.value))
+        (given_data)
+
     // Add the valueline path.
-    svg.append("path")
+    path = svg.append("path")
         .data([data])
         .attr('id', 'chartline')
+        .attr("clip-path", "url(#clip-1)")
         .attr("class", "line")
-        .attr("d", valueline);
+        .attr("d", valueline(data, x));
+
+    // Create zoom
+    const zoom = d3.zoom()
+        .scaleExtent([1, 30])
+        .extent([[margin.left, 0], [width - margin.right, height]])
+        .translateExtent([[margin.left, -Infinity], [width - margin.right, Infinity]])
+        .on("zoom", zoomed);
+    
+    // Zoom handler
+    function zoomed(event) {
+        console.log('zoom zoom');
+        const xz = event.transform.rescaleX(x);
+        path.attr("d", valueline(data, xz));
+
+        svg.select("#xaxis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(xz));
+    }
+
+    //Apply zoom to chart
+    svg.call(zoom)
+    .transition()
+      .duration(750)
+      .call(zoom.scaleTo, 1);
 
     function render() {
         // Scale the range of the data
-        x.domain(d3.extent(data, function (d) {
-            return d.date;
-        }));
-        y.domain([0, d3.max(data, function (d) {
-            return d.value;
-        })]);
+        x.domain(d3.extent(data, d => d.date));
+        y.domain([d3.min(data, d => d.value), d3.max(data, d => d.value)]);
+
         //Update x axis
         svg.select("#xaxis")
-            .attr("id", "xaxis")
             .attr("transform", "translate(0," + height + ")")
             .call(d3.axisBottom(x));
+
         //Update y axis
         svg.select("#yaxis")
-            .attr("id", "yaxis")
             .call(d3.axisLeft(y));
+
         // Add the valueline path.
         svg.select("#chartline")
             .data([data])
+            .attr("clip-path", "url(#clip-1)")
             .attr("class", "line")
-            .attr("d", valueline);
+            .attr("d", valueline(data, x));
     }
     
     function newVal() {
