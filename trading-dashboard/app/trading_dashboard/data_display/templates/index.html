@@ -100,7 +100,6 @@
     
     // Zoom handler
     function zoomed(event) {
-        console.log('zoom zoom');
         const xz = event.transform.rescaleX(x);
         path.attr("d", valueline(data, xz));
 
@@ -141,6 +140,9 @@
         $.ajax({
             url: "get_newest_val",
             type: "get",
+            data: {
+                ticker: 'GME',
+            },
             success: function(response) {
                 jsonresponse = JSON.parse(response);
                 time = new Date(jsonresponse[0].fields.timestamp+'Z');
@@ -167,6 +169,7 @@
                 url: "get_historical_vals",
                 type: "get",
                 data: {
+                    ticker: 'GME',
                     period: period
                 },
                 success: function(response) {
