@@ -1,7 +1,7 @@
 # 8:30 to 9
-30-59/1 8 * * 1-5 /usr/local/bin/python /code/scripts/pop_db_test.py >> /var/log/cron.log 2>&1
+30-59/1 13 * * 1-5 /usr/local/bin/python /code/scripts/pop_db_test.py >> /var/log/cron.log 2>&1
 
 # 9 to 3
-* 9-15 * * 1-5 /usr/local/bin/python /code/scripts/pop_db_test.py >> /var/log/cron.log 2>&1
+* 14-19 * * 1-5 /usr/local/bin/python /code/scripts/pop_db_test.py >> /var/log/cron.log 2>&1
 
 # cron requires blank last line

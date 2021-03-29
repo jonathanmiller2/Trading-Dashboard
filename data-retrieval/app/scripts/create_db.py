@@ -20,7 +20,9 @@ print('PORT=' + sqlport)
 conn = psycopg2.connect(host=sqlhost, database=sqldb, user=sqlusr, password=sqlpass, port=sqlport)
 cur = conn.cursor()
 cur.execute('DROP TABLE IF EXISTS randseries;')
-cur.execute('CREATE TABLE randseries (id serial PRIMARY KEY, timestamp timestamp, val numeric)')
+
+cur.execute('DROP TABLE IF EXISTS ticker_gme;')
+cur.execute('CREATE TABLE ticker_gme (id serial PRIMARY KEY, timestamp timestamp, val numeric)')
 
 conn.commit()
 cur.close()
