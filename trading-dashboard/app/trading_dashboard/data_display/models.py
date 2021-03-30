@@ -1,8 +1,7 @@
 from django.db import models
 
-
 class Ticker_GME(models.Model):
-    timestamp = models.DateTimeField(blank=True, null=True)
+    timestamp = models.DateTimeField(primary_key=True)
     val = models.DecimalField(max_digits=65535, decimal_places=65535, blank=True, null=True)
 
     class Meta:

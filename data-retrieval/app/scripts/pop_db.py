@@ -15,25 +15,25 @@ sqlpass = os.environ.get('SQL_PASSWORD')
 sqlport = os.environ.get('SQL_PORT')
 avkey = os.environ.get('ALPHA_VANTAGE_API_KEY')
 
-#print('Connecting to DB with following parameters:')
-#print('HOST=' + sqlhost)
-#print('SQL_DB=' + sqldb)
-#print('USER=' + sqlusr)
-#print('PW=' + sqlpass)
-#print('PORT=' + sqlport)
-
 conn = psycopg2.connect(host=sqlhost, database=sqldb, user=sqlusr, password=sqlpass, port=sqlport)
 cur = conn.cursor()
 
 symbol = "GME"
+api_time_format = "%Y-%m-%d %H:%M:%S"
 url = f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&interval=1min&outputsize=compact&apikey={avkey}"
 response = requests.get(url).json()
-value = list(response['Time Series (1min)'].values())[0]['4. close']
 
-cur.execute(f'INSERT INTO ticker_{symbol}(timestamp, val) VALUES (%s, %s)', (datetime.now(), value))
+most_recent_entry = list(response['Time Series (1min)'].items())[0]
+timestamp = datetime.strptime(most_recent_entry[0], api_time_format)
+close = most_recent_entry[1]["4. close"]
 
-print("Inserted new value")
+try:
+    cur.execute(f'INSERT INTO ticker_{symbol}(timestamp, val) VALUES (%s, %s)', (timestamp, close))
+    print(f"Inserted new value: {close}")
+    conn.commit()
 
-conn.commit()
+except psycopg2.errors.UniqueViolation:
+    print("ERROR: pop_db.py is trying to insert a timestamp that already exists in the table!")
+
 cur.close()
 conn.close()
