@@ -145,7 +145,7 @@
             },
             success: function(response) {
                 jsonresponse = JSON.parse(response);
-                time = new Date(jsonresponse[0].fields.timestamp+'Z');
+                time = new Date(jsonresponse[0].pk+'Z');
                 val = jsonresponse[0].fields.val;
                 document.getElementById("val").innerHTML = document.getElementById("val").innerHTML + "(" + time  + ", &ensp;" + val + ")" + "<br/>";
                 data.push({
@@ -175,9 +175,12 @@
                 success: function(response) {
                     data = []
                     jsonresponse = JSON.parse(response);
+
+                    console.log(jsonresponse);
+
                     document.getElementById("val").innerHTML = "";
                     jsonresponse.forEach(point => {
-                        time = new Date(point.fields.timestamp+'Z');
+                        time = new Date(point.pk+'Z');
                         val = point.fields.val;
                         data.push({
                             date: time,
