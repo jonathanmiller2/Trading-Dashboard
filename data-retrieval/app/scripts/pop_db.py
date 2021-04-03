@@ -23,12 +23,13 @@ api_time_format = "%Y-%m-%d %H:%M:%S"
 url = f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&interval=1min&outputsize=compact&apikey={avkey}"
 response = requests.get(url).json()
 
-most_recent_entry = list(response['Time Series (1min)'].items())[0]
-timestamp = datetime.strptime(most_recent_entry[0], api_time_format)
-close = most_recent_entry[1]["4. close"]
+response_keys = list(response['Time Series (1min)'].keys())
+response_times = [datetime.strptime(x, api_time_format) for x in response_keys]
+newest_time = max(response_times)
+close = response['Time Series (1min)'][newest_time.strftime(api_time_format)]["4. close"]
 
 try:
-    cur.execute(f'INSERT INTO ticker_{symbol}(timestamp, val) VALUES (%s, %s)', (timestamp, close))
+    cur.execute(f'INSERT INTO ticker(timestamp, symbol, val) VALUES (%s, %s, %s)', (newest_time, symbol, close))
     print(f"Inserted new value: {close}")
     conn.commit()
 
