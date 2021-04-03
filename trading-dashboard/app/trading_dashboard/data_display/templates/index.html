@@ -141,7 +141,7 @@
             url: "get_newest_val",
             type: "get",
             data: {
-                ticker: 'GME',
+                symbol: 'GME',
             },
             success: function(response) {
                 jsonresponse = JSON.parse(response);
@@ -169,7 +169,7 @@
                 url: "get_historical_vals",
                 type: "get",
                 data: {
-                    ticker: 'GME',
+                    symbol: 'GME',
                     period: period
                 },
                 success: function(response) {
