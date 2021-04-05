@@ -1,6 +1,8 @@
 import os
 import psycopg2
 import requests
+import yfinance as yf
+import pandas as pd
 
 from dotenv import load_dotenv
 load_dotenv(verbose=True)
@@ -19,18 +21,14 @@ conn = psycopg2.connect(host=sqlhost, database=sqldb, user=sqlusr, password=sqlp
 cur = conn.cursor()
 
 symbol = "GME"
-api_time_format = "%Y-%m-%d %H:%M:%S"
-url = f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&interval=1min&outputsize=compact&apikey={avkey}"
-response = requests.get(url).json()
-
-response_keys = list(response['Time Series (1min)'].keys())
-response_times = [datetime.strptime(x, api_time_format) for x in response_keys]
-newest_time = max(response_times)
-close = response['Time Series (1min)'][newest_time.strftime(api_time_format)]["4. close"]
+yticker = yf.Ticker(symbol)
+df = yticker.history(period='1d', interval='1m')
+close = df['Close'].iloc[-1]
+newest_time = df.index[-1]
 
 try:
     cur.execute(f'INSERT INTO ticker(timestamp, symbol, val) VALUES (%s, %s, %s)', (newest_time, symbol, close))
-    print(f"Inserted new value: {close}")
+    print(f"Inserted new value:\t{newest_time}\t{close}")
     conn.commit()
 
 except psycopg2.errors.UniqueViolation:
