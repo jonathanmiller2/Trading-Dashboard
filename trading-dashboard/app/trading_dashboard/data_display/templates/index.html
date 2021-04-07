@@ -150,7 +150,7 @@
                 document.getElementById("val").innerHTML = document.getElementById("val").innerHTML + "(" + time  + ", &ensp;" + val + ")" + "<br/>";
                 data.push({
                     date: time,
-                    value: parseInt(val)
+                    value: parseFloat(val)
                 });
                 console.log(data);
                 render();
@@ -184,7 +184,7 @@
                         val = point.fields.val;
                         data.push({
                             date: time,
-                            value: parseInt(val)
+                            value: parseFloat(val)
                         });
                         document.getElementById("val").innerHTML = document.getElementById("val").innerHTML + "(" + time  + ", &ensp;" + val + ")" + "<br/>";
                     });
