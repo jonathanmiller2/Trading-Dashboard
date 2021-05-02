@@ -10,6 +10,9 @@ def index(request):
     return render(request, 'index.html')
 
 def get_historical_vals(request):
+
+    #TODO: https://stackoverflow.com/questions/30465013/django-group-by-hour
+
     period = int(request.GET['period'])
     symbol = request.GET['symbol']
 
