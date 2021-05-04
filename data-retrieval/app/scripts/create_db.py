@@ -20,14 +20,8 @@ print('PORT=' + sqlport)
 conn = psycopg2.connect(host=sqlhost, database=sqldb, user=sqlusr, password=sqlpass, port=sqlport)
 cur = conn.cursor()
 
-#cur.execute('DROP TABLE IF EXISTS ticker;')
-#cur.execute('CREATE TABLE ticker (timestamp timestamp, symbol text, val numeric, PRIMARY KEY(timestamp, symbol))')
-
-cur.execute('DROP TABLE IF EXISTS trades;')
-cur.execute('CREATE TABLE trades (timestamp timestamp, algo text, symbol text, amount integer, PRIMARY KEY(timestamp, algo, symbol));')
-
-cur.execute('DROP TABLE IF EXISTS balances;')
-cur.execute('CREATE TABLE balances (timestamp timestamp, algo text, symbol text, balance numeric, PRIMARY KEY(timestamp, algo, symbol));')
+sql_file = open('create_db.sql','r')
+cur.execute(sql_file.read())
 
 conn.commit()
 cur.close()
