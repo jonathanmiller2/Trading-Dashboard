@@ -3,16 +3,13 @@ services:
     image: postgres
     
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - /data/trading/database/:/var/lib/postgresql/data
 
     env_file:
       - ./.env.db
 
     networks:
       - shared
-
-volumes:
-  postgres_data:
     
 networks:
   shared: 
