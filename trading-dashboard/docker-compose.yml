@@ -5,7 +5,8 @@ services:
   web:
     build: ./app
 
-    command: bash -c "python manage.py migrate --noinput -v 1 && 
+    command: bash -c "python manage.py inspectdb > newmodels.py &&
+                      python manage.py migrate --noinput -v 1 && 
                       echo MIGRATE_FIN &&
                       python manage.py check &&
                       echo CHECK_FIN &&
@@ -17,7 +18,7 @@ services:
                       #gunicorn eomf.wsgi:application --bind 0.0.0.0:8000"
                       #python manage.py runserver 0.0.0.0:8000"
                       #python manage.py makemigrations --empty pages &&
-                      #python manage.py inspectdb > models.py
+                      #python manage.py inspectdb > newmodels.py
 
     networks:
       - shared
