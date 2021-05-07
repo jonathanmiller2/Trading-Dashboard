@@ -1,6 +1,13 @@
+DROP TABLE IF EXISTS asset_source CASCADE;
+CREATE TABLE asset_source(
+    source_name TEXT,
+    PRIMARY KEY (source_name)
+);
+
 DROP TABLE IF EXISTS asset CASCADE;
 CREATE TABLE asset(
     asset_symbol TEXT,
+    source TEXT REFERENCES asset_source (source_name) ON DELETE CASCADE,
     PRIMARY KEY (asset_symbol)
 );
 
@@ -101,12 +108,7 @@ BEGIN
         UNION
         SELECT balance.timestamp FROM balance 
     LOOP
-        SELECT COALESCE(balance.balance, 0) INTO raw_asset
-        FROM balance
-        WHERE balance.asset_symbol = as_asset AND balance.algo = algo_id AND exchange_rate.timestamp < tick
-        ORDER BY balance.timestamp DESC;
-
-        sum := raw_asset;
+        sum := 0;
 
         FOR asset IN
             SELECT asset_symbol FROM asset
@@ -116,19 +118,24 @@ BEGIN
             WHERE balance.asset_symbol = asset.asset_symbol AND balance.algo = algo_id AND balance.timestamp < tick
             ORDER BY balance.timestamp DESC;
 
-            SELECT COALESCE(exchange_rate.rate, 0) INTO rate
-            FROM exchange_rate
-            WHERE exchange_rate.from_asset = as_asset AND exchange_rate.to_asset = asset.asset_symbol AND exchange_rate.timestamp < tick
-            ORDER BY exchange_rate.timestamp DESC;
-
-            IF rate IS NULL
+            IF asset == as_asset
             THEN
+                rate := 1;
+            ELSE
                 SELECT COALESCE(exchange_rate.rate, 0) INTO rate
                 FROM exchange_rate
-                WHERE exchange_rate.from_asset = asset.asset_symbol AND exchange_rate.to_asset = as_asset AND exchange_rate.timestamp < tick
+                WHERE exchange_rate.from_asset = as_asset AND exchange_rate.to_asset = asset.asset_symbol AND exchange_rate.timestamp < tick
                 ORDER BY exchange_rate.timestamp DESC;
 
-                rate := 1 / rate;
+                IF rate IS NULL
+                THEN
+                    SELECT COALESCE(exchange_rate.rate, 0) INTO rate
+                    FROM exchange_rate
+                    WHERE exchange_rate.from_asset = asset.asset_symbol AND exchange_rate.to_asset = as_asset AND exchange_rate.timestamp < tick
+                    ORDER BY exchange_rate.timestamp DESC;
+
+                    rate := 1 / rate;
+                END IF;
             END IF;
 
             sum := sum + rate * amount;

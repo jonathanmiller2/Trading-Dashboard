@@ -20,7 +20,7 @@ avkey = os.environ.get('ALPHA_VANTAGE_API_KEY')
 conn = psycopg2.connect(host=sqlhost, database=sqldb, user=sqlusr, password=sqlpass, port=sqlport)
 cur = conn.cursor()
 
-symbol = "GME"
+symbol = "SPY"
 yticker = yf.Ticker(symbol)
 df = yticker.history(period='1d', interval='1m')
 close = df['Close'].iloc[-1]
