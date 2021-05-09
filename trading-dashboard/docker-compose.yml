@@ -5,7 +5,7 @@ services:
   web:
     build: ./app
 
-    command: bash -c "python manage.py inspectdb > newmodels.py &&
+    command: bash -c "python manage.py inspectdb > newmodels &&
                       python manage.py migrate --noinput -v 1 && 
                       echo MIGRATE_FIN &&
                       python manage.py check &&

@@ -19,6 +19,7 @@ class Algo(models.Model):
 
 class Asset(models.Model):
     asset_symbol = models.TextField(primary_key=True)
+    source = models.TextField()
 
     class Meta:
         managed = False

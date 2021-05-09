@@ -1,13 +1,7 @@
-DROP TABLE IF EXISTS asset_source CASCADE;
-CREATE TABLE asset_source(
-    source_name TEXT,
-    PRIMARY KEY (source_name)
-);
-
 DROP TABLE IF EXISTS asset CASCADE;
 CREATE TABLE asset(
     asset_symbol TEXT,
-    source TEXT REFERENCES asset_source (source_name) ON DELETE CASCADE,
+    source TEXT NOT NULL,
     PRIMARY KEY (asset_symbol)
 );
 
@@ -54,7 +48,6 @@ CREATE OR REPLACE PROCEDURE make_trade(
     algo_name algo.algo_name%TYPE,
     from_asset asset.asset_symbol%TYPE, 
     to_asset asset.asset_symbol%TYPE,
-    rate exchange_rate.rate%TYPE,
     amount_bought balance.balance%TYPE
 ) 
 AS $$
@@ -65,11 +58,19 @@ DECLARE
     new_from_asset_balance balance.balance%TYPE;
     new_to_asset_balance balance.balance%TYPE;
     change_in_from_asset balance.balance%TYPE;
+    newest_rate exchange_rate.rate%TYPE;
 
 BEGIN
     SELECT algo.algo_id INTO algo_id FROM algo WHERE algo.algo_name = algo_name;
     SELECT COALESCE(balance.balance, 0) INTO old_from_asset_balance FROM balance WHERE balance.algo_id = algo_id AND balance.asset_symbol = from_asset ORDER BY balance.timestamp DESC;
     SELECT COALESCE(balance.balance, 0) INTO old_to_asset_balance FROM balance WHERE balance.algo_id = algo_id AND balance.asset_symbol = to_asset ORDER BY balance.timestamp DESC;
+
+    SELECT exchange_rate.rate INTO newest_rate FROM exchange_rate WHERE exchange_rate.from_asset = from_asset AND exchange_rate.to_asset = to_asset ORDER BY exchange_rate.timestamp DESC;
+    IF newest_rate IS NULL
+    THEN 
+        SELECT exchange_rate.rate INTO newest_rate FROM exchange_rate WHERE exchange_rate.from_asset = to_asset AND exchange_rate.to_asset = from_asset ORDER BY exchange_rate.timestamp DESC;
+        newest_rate := 1 / newest_rate;
+    END IF;
 
     INSERT INTO trade (tick, algo_id, from_asset, to_asset, amount)
     VALUES (tick, algo_id, from_asset, to_asset, amount);
@@ -122,14 +123,14 @@ BEGIN
             THEN
                 rate := 1;
             ELSE
-                SELECT COALESCE(exchange_rate.rate, 0) INTO rate
+                SELECT exchange_rate.rate INTO rate
                 FROM exchange_rate
                 WHERE exchange_rate.from_asset = as_asset AND exchange_rate.to_asset = asset.asset_symbol AND exchange_rate.timestamp < tick
                 ORDER BY exchange_rate.timestamp DESC;
 
                 IF rate IS NULL
                 THEN
-                    SELECT COALESCE(exchange_rate.rate, 0) INTO rate
+                    SELECT exchange_rate.rate INTO rate
                     FROM exchange_rate
                     WHERE exchange_rate.from_asset = asset.asset_symbol AND exchange_rate.to_asset = as_asset AND exchange_rate.timestamp < tick
                     ORDER BY exchange_rate.timestamp DESC;

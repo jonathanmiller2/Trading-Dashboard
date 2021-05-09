@@ -19,5 +19,6 @@ from django.urls import include, path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('data_display/', include('trading_dashboard.data_display.urls'))
+    path('data_display/', include('trading_dashboard.data_display.urls')),
+    path('assets/', include('trading_dashboard.asset_tracking.urls')),
 ]

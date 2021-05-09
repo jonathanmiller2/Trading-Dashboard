@@ -1,0 +1,64 @@
+<style>
+
+	#menu-dashboard > a:hover {
+		color: #009933;
+		font-weight:bold;
+		transition:all 0.2s;
+	}
+	#menu-assets > a:hover {
+		color: #00688B;
+		font-weight:bold;
+		transition:all 0.2s;
+	}
+	#menu-algos > a:hover {
+		color: 	#99993D;
+		font-weight:bold;
+		transition:all 0.2s;
+	}
+	#menu-trades > a:hover {
+		color: #008AE6;
+		font-weight:bold;
+		transition:all 0.2s;
+	}
+
+	.navbar {
+		border-bottom: 1px solid #d7d7d7;
+		box-shadow: 0px 0px 3px #d7d7d7
+	}
+
+	.active {
+		box-shadow: inset 0px 0px 3px #d7d7d7;
+	}
+
+	.nav-link {
+		width: 123px;
+		text-align: center;
+	}
+	
+</style>
+
+
+<nav id="full-navbar" class="navbar navbar-expand mb-4 navbar-dark bg-dark">
+	<ul class="navbar-nav ml-5 mr-auto">
+		<li id="menu-dashboard" class="nav-item{% if '/' == request.path %} active{% endif %}">
+			<a class="nav-link" href="/">
+				<span class="fas fa-home"></span> Dashboard
+			</a>
+		</li>
+		<li id="menu-assets" class="nav-item{% if '/assets/' in request.path %} active{% endif %}">
+			<a class="nav-link" href="/assets/">
+				<span class="fas fa-wave-square"></span> Assets
+			</a>
+		</li>
+		<li id="menu-algos" class="nav-item{% if '/algos/' in request.path %} active{% endif %}">
+			<a class="nav-link" href="/algos/">
+				<span class="fas fa-layer-group"></span> Algos
+			</a>
+		</li>
+		<li id="menu-trades" class="nav-item{% if '/trades/' in request.path %} active{% endif %}">
+			<a class="nav-link" href="/trades/">
+				<span class="fas fa-exchange-alt"></span> Trades
+			</a>
+		</li>
+	</ul>   
+</nav>
