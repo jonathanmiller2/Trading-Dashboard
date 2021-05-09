@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'trading_dashboard.data_display'
+    'trading_dashboard.data_display',
+    'trading_dashboard.asset_tracking'
 ]
 
 MIDDLEWARE = [

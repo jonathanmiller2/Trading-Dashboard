@@ -1,4 +1,5 @@
 from django.db import models
+from trading_dashboard.asset_tracking.models import Asset
 
 class Algo(models.Model):
     algo_id = models.IntegerField(primary_key=True)
@@ -8,18 +9,10 @@ class Algo(models.Model):
         managed = False
         db_table = 'algo'
 
-
-class Asset(models.Model):
-    asset_symbol = models.TextField(primary_key=True)
-
-    class Meta:
-        managed = False
-        db_table = 'asset'
-
 class Balance(models.Model):
     timestamp = models.DateTimeField(primary_key=True)
-    algo = models.ForeignKey(Algo, models.DO_NOTHING)
-    asset_symbol = models.ForeignKey(Asset, models.DO_NOTHING, db_column='asset_symbol')
+    algo = models.ForeignKey(Algo, models.CASCADE)
+    asset_symbol = models.ForeignKey(Asset, models.CASCADE, db_column='asset_symbol')
     balance = models.DecimalField(max_digits=65535, decimal_places=65535)
 
     class Meta:
@@ -29,8 +22,8 @@ class Balance(models.Model):
 
 class ExchangeRate(models.Model):
     timestamp = models.DateTimeField(primary_key=True)
-    from_asset = models.ForeignKey(Asset, models.DO_NOTHING, db_column='from_asset')
-    to_asset = models.ForeignKey(Asset, models.DO_NOTHING, db_column='to_asset')
+    from_asset = models.ForeignKey(Asset, models.CASCADE, db_column='from_asset', related_name="ers_from_asset")
+    to_asset = models.ForeignKey(Asset, models.CASCADE, db_column='to_asset', related_name="ers_to_asset")
     rate = models.DecimalField(max_digits=65535, decimal_places=65535)
 
     class Meta:
@@ -38,12 +31,11 @@ class ExchangeRate(models.Model):
         db_table = 'exchange_rate'
         unique_together = (('timestamp', 'from_asset', 'to_asset'),)
 
-
 class Trade(models.Model):
     timestamp = models.DateTimeField(primary_key=True)
-    algo = models.ForeignKey(Algo, models.DO_NOTHING)
-    from_asset = models.ForeignKey(Asset, models.DO_NOTHING, db_column='from_asset')
-    to_asset = models.ForeignKey(Asset, models.DO_NOTHING, db_column='to_asset')
+    algo = models.ForeignKey(Algo, models.CASCADE)
+    from_asset = models.ForeignKey(Asset, models.CASCADE, db_column='from_asset', related_name="trades_from_asset")
+    to_asset = models.ForeignKey(Asset, models.CASCADE, db_column='to_asset', related_name="trades_to_asset")
     amount = models.DecimalField(max_digits=65535, decimal_places=65535)
 
     class Meta:

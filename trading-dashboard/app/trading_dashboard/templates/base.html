@@ -7,10 +7,28 @@
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
 
         <script src="https://d3js.org/d3.v6.min.js"></script>
+
+        <script src="https://kit.fontawesome.com/7d1ad78d0c.js" crossorigin="anonymous"></script>
     </head>
 
+    <header>
+        {% include "header.html" %}
+    </header>
+
     <body>
-        {% block content %}
-        {% endblock %}
+        <div class="row m-0">
+            <div class="col-2">
+                <nav class="card bg-light ml-5 shadow-sm">
+                    <ul class="p-0" style="list-style: none;">
+                        {% block left_menu %}
+                        {% endblock %}
+                    </ul>
+                </nav>
+            </div>
+            <div class="col">
+                {% block content %}
+                {% endblock %}
+            </div>
+        </div>
     </body>
 </html>
