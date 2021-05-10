@@ -12,13 +12,13 @@ class Algo(models.Model):
 class Balance(models.Model):
     timestamp = models.DateTimeField(primary_key=True)
     algo = models.ForeignKey(Algo, models.CASCADE)
-    asset_symbol = models.ForeignKey(Asset, models.CASCADE, db_column='asset_symbol')
+    asset = models.ForeignKey(Asset, models.CASCADE, db_column='asset')
     balance = models.DecimalField(max_digits=65535, decimal_places=65535)
 
     class Meta:
         managed = False
         db_table = 'balance'
-        unique_together = (('timestamp', 'algo', 'asset_symbol'),)
+        unique_together = (('timestamp', 'algo', 'asset'),)
 
 class ExchangeRate(models.Model):
     timestamp = models.DateTimeField(primary_key=True)
