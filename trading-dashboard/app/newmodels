@@ -18,7 +18,7 @@ class Algo(models.Model):
 
 
 class Asset(models.Model):
-    asset_symbol = models.TextField(primary_key=True)
+    symbol = models.TextField(primary_key=True)
     source = models.TextField()
 
     class Meta:
@@ -95,13 +95,13 @@ class AuthUserUserPermissions(models.Model):
 class Balance(models.Model):
     timestamp = models.DateTimeField(primary_key=True)
     algo = models.ForeignKey(Algo, models.DO_NOTHING)
-    asset_symbol = models.ForeignKey(Asset, models.DO_NOTHING, db_column='asset_symbol')
+    asset = models.ForeignKey(Asset, models.DO_NOTHING, db_column='asset')
     balance = models.DecimalField(max_digits=65535, decimal_places=65535)
 
     class Meta:
         managed = False
         db_table = 'balance'
-        unique_together = (('timestamp', 'algo', 'asset_symbol'),)
+        unique_together = (('timestamp', 'algo', 'asset'),)
 
 
 class DjangoAdminLog(models.Model):
