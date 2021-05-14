@@ -4,8 +4,8 @@ import requests
 import yfinance as yf
 import pandas as pd
 
-from dotenv import load_dotenv
-load_dotenv(verbose=True)
+#from dotenv import load_dotenv
+#load_dotenv(verbose=True)
 
 from datetime import datetime
 from random import random
