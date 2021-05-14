@@ -1,0 +1,36 @@
+<style>
+	a {
+		font-size: 11pt;
+		color: #4f85d1;
+	}
+
+	a > p {
+		font-size: 11pt;
+		color: #4f85d1;
+	}
+
+	.nav-header {
+        color: #999999;
+		font-weight: bold;
+		font-size: 8pt;
+		text-transform: uppercase;
+		margin: 1.5em 0em 0.25em 1.5em;
+    }
+</style>
+
+<li class='nav-header'>
+    Accounts
+</li>
+{% if user.is_authenticated %}
+<li> 
+    <a href='/accounts/logout?next=/users/' class="btn btn-light btn-block rounded-0 p-0">
+        <p class="mx-4 m-0 text-left">Logout</p>
+    </a>
+</li>
+{% else %}
+<li> 
+    <a href='/accounts/login?next=/users/' class="btn btn-light btn-block rounded-0 p-0">
+        <p class=" mx-4 m-0 text-left">Login</p>
+    </a>
+</li>
+{% endif %}

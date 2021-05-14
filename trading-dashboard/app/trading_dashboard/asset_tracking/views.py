@@ -1,9 +1,10 @@
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 from django.db import IntegrityError
+from django.contrib.auth.decorators import login_required
 from trading_dashboard.asset_tracking.models import Asset
 
-
+@login_required
 def index(request):
     data = {}
     data['assets'] = Asset.objects.all()
