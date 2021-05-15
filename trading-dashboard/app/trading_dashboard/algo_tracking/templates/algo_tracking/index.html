@@ -1,0 +1,35 @@
+{% extends "algo_tracking/base.html" %}
+
+{% block content %}
+
+<style>
+</style>
+
+<div>
+    <h1>Trading Algorithms</h1>
+    <hr class="my-4"/>
+    <h4>Algo List:</h4>
+    <table class="table mt-4">
+        <thead class="thead-light">
+            <th style="width: 24%" scope="col">Name</th>
+            <th style="width: 24%" scope="col">Net Worth</th>
+            <th style="width: 24%" scope="col">Sparkline</th>
+            <th style="width: 24%" scope="col">Today's Change</th>
+        </thead>
+        <tbody>
+            {% for algo in algos %}
+            <tr>
+                <th scope="row">{{algo.namel}}</th>
+                <td>{{asset.source}}</td>
+                <td></td>
+                <td></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+</script>
+
+{% endblock %}

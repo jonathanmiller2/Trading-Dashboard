@@ -1,11 +1,10 @@
-import os
+import os, subprocess, time, math, requests
 import psycopg2
-import requests
 import yfinance as yf
 import pandas as pd
 
-#from dotenv import load_dotenv
-#load_dotenv(verbose=True)
+from dotenv import load_dotenv
+load_dotenv(verbose=True)
 
 from datetime import datetime
 from random import random
@@ -41,6 +40,20 @@ for asset in assets:
         except psycopg2.errors.UniqueViolation:
             print("ERROR: pop_db.py is trying to insert a timestamp that already exists in the table!")
             conn.rollback()
+
+
+
+algostart = time.time()
+
+algo_files = ['./algos/' + f for f in os.listdir("./algos/")]
+for algo_file in algo_files:
+    subprocess.run(["python", algo_file])
+
+algoend = time.time()
+
+f = open("exec_time.log", "a")
+f.write(str(math.trunc(algoend - algostart)) + "\n")
+f.close()
 
 cur.close()
 conn.close()
