@@ -30,7 +30,7 @@ def untrack_asset(request):
     data = {}
 
     if request.method == 'POST':
-        Asset.objects.get(symbol__exact=request.POST['symbol']).delete()
+        Asset.objects.filter(symbol__exact=request.POST['symbol']).delete()
     
     data['assets'] = Asset.objects.all()
 
