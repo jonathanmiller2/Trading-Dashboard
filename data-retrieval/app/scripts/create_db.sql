@@ -7,9 +7,16 @@ CREATE TABLE asset(
 
 DROP TABLE IF EXISTS algo CASCADE;
 CREATE TABLE algo(
-    algo_id INT GENERATED ALWAYS AS IDENTITY,
-    algo_name TEXT NOT NULL,
-    PRIMARY KEY (algo_id)
+    id INT GENERATED ALWAYS AS IDENTITY,
+    name TEXT NOT NULL,
+    PRIMARY KEY (id)
+);
+
+DROP TABLE IF EXISTS trades_on CASCADE;
+CREATE TABLE trades_on(
+    algo_id INT REFERENCES algo (id) ON DELETE CASCADE,
+    asset TEXT REFERENCES asset (symbol) ON DELETE CASCADE,
+    PRIMARY KEY (algo_id, asset)
 );
 
 DROP TABLE IF EXISTS exchange_rate CASCADE;
@@ -24,7 +31,7 @@ CREATE TABLE exchange_rate (
 DROP TABLE IF EXISTS trade CASCADE;
 CREATE TABLE trade (
     timestamp timestamp, 
-    algo_id INT REFERENCES algo ON DELETE CASCADE, 
+    algo_id INT REFERENCES algo (id) ON DELETE CASCADE, 
     from_asset TEXT REFERENCES asset (symbol) ON DELETE CASCADE, 
     to_asset TEXT REFERENCES asset (symbol) ON DELETE CASCADE, 
     amount NUMERIC NOT NULL, 
@@ -34,7 +41,7 @@ CREATE TABLE trade (
 DROP TABLE IF EXISTS balance CASCADE;
 CREATE TABLE balance (
     timestamp timestamp, 
-    algo_id INT REFERENCES algo ON DELETE CASCADE,  
+    algo_id INT REFERENCES algo (id) ON DELETE CASCADE,  
     asset TEXT REFERENCES asset (symbol) ON DELETE CASCADE,  
     balance NUMERIC NOT NULL, 
     PRIMARY KEY(timestamp, algo_id, asset)
@@ -45,14 +52,14 @@ CREATE TABLE balance (
 
 CREATE OR REPLACE PROCEDURE make_trade(
     tick TIMESTAMP,
-    algo_name algo.algo_name%TYPE,
+    algo_name algo.name%TYPE,
     from_asset asset.symbol%TYPE, 
     to_asset asset.symbol%TYPE,
     amount_bought balance.balance%TYPE
 ) 
 AS $$
 DECLARE
-    algo_id algo.algo_id%TYPE;
+    algo_id algo.id%TYPE;
     old_from_asset_balance balance.balance%TYPE;
     old_to_asset_balance balance.balance%TYPE;
     new_from_asset_balance balance.balance%TYPE;
@@ -61,7 +68,7 @@ DECLARE
     newest_rate exchange_rate.rate%TYPE;
 
 BEGIN
-    SELECT algo.algo_id INTO algo_id FROM algo WHERE algo.algo_name = algo_name;
+    SELECT algo.id INTO algo_id FROM algo WHERE algo.name = algo_name;
     SELECT COALESCE(balance.balance, 0) INTO old_from_asset_balance FROM balance WHERE balance.algo_id = algo_id AND balance.asset = from_asset ORDER BY balance.timestamp DESC;
     SELECT COALESCE(balance.balance, 0) INTO old_to_asset_balance FROM balance WHERE balance.algo_id = algo_id AND balance.asset = to_asset ORDER BY balance.timestamp DESC;
 
@@ -91,7 +98,7 @@ LANGUAGE plpgsql;
 
 
 
-CREATE OR REPLACE FUNCTION get_total_balance(algo_id algo.algo_id%TYPE, as_asset asset.symbol%TYPE) RETURNS TABLE(res_timestamp TIMESTAMP, res_total_balance NUMERIC) AS $$
+CREATE OR REPLACE FUNCTION get_total_balance(algo_id algo.id%TYPE, as_asset asset.symbol%TYPE) RETURNS TABLE(res_timestamp TIMESTAMP, res_total_balance NUMERIC) AS $$
 
 DECLARE
     raw_asset balance.balance%TYPE;

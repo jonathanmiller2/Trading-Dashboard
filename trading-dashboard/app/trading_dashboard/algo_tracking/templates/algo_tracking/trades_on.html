@@ -1,0 +1,60 @@
+{% extends "algo_tracking/base.html" %}
+
+{% block content %}
+
+<style>
+</style>
+
+<div>
+    <h1>Algo Asset Trades</h1>
+    <hr class="my-4"/>
+    <h4>Trade a New Asset:</h4>
+    <form class="mt-3 mb-4" method="POST" action="./add_trade_on">
+        {% csrf_token %}
+        <div class="form-group row">
+            <label class="col-1 col-form-label mr-2" for="assetSymbolInput">Algo:</label>
+            <div class="col-2">
+                {{ form.algo }}
+            </div>
+            </div>
+        </div> 
+        <div class="form-group row">
+            <label class="col-1 col-form-label mr-2" for="assetSourceInput">Asset:</label>
+            <div class="col-2">
+                {{ form.asset }}
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary col-3 mb-2">Submit</button>
+    </form>
+    <hr class="my-4"/>
+    <h4>Trades List:</h4>
+    <table class="table mt-4">
+        <thead class="thead-light">
+            <th style="width: 20%">Algo</th>
+            <th style="width: 20%"></th>
+            <th style="width: 100%">Asset</th>
+            <th></th>
+        </thead>
+        <tbody>
+            {% for trade in trades_on %}
+            <tr>
+                <th scope="row">{{trade.algo.name}}</th>
+                <td>trades on</td>
+                <td>{{trade.asset.symbol}}</td>
+                <td>
+                    <form method="POST" action="./remove_trade_on" onsubmit="return confirm('Are you sure you want this algo to no longer trade this asset?');">
+                        {% csrf_token %}
+                        <input type="text" name="symbol" value="{{asset.symbol}}" hidden></input>
+                        <button type="submit" class="btn btn-sm btn-warning">Remove</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+</script>
+
+{% endblock %}

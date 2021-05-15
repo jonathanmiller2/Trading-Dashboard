@@ -9,8 +9,8 @@ from django.db import models
 
 
 class Algo(models.Model):
-    algo_id = models.IntegerField(primary_key=True)
-    algo_name = models.TextField()
+    id = models.IntegerField(primary_key=True)
+    name = models.TextField()
 
     class Meta:
         managed = False
@@ -171,3 +171,13 @@ class Trade(models.Model):
         managed = False
         db_table = 'trade'
         unique_together = (('timestamp', 'algo', 'from_asset', 'to_asset'),)
+
+
+class TradesOn(models.Model):
+    algo = models.ForeignKey(Algo, models.DO_NOTHING, primary_key=True)
+    asset = models.ForeignKey(Asset, models.DO_NOTHING, db_column='asset')
+
+    class Meta:
+        managed = False
+        db_table = 'trades_on'
+        unique_together = (('algo', 'asset'),)
