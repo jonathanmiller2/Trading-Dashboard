@@ -12,16 +12,23 @@
     <form class="mt-3 mb-4" method="POST" action="./add_trade_on">
         {% csrf_token %}
         <div class="form-group row">
-            <label class="col-1 col-form-label mr-2" for="assetSymbolInput">Algo:</label>
-            <div class="col-2">
-                {{ form.algo }}
-            </div>
+            <label class="col-1 col-form-label mr-2" for="algoInput">Algo:</label>
+            <div class="col-2 pr-0">
+                <select class="form-control" id="algoInput" name="algo">
+                    {% for algo in algo_list %}
+                        <option>{{algo.name}}</option>
+                    {% endfor %}
+                </select>
             </div>
         </div> 
         <div class="form-group row">
-            <label class="col-1 col-form-label mr-2" for="assetSourceInput">Asset:</label>
-            <div class="col-2">
-                {{ form.asset }}
+            <label class="col-1 col-form-label mr-2" for="assetInput">Asset:</label>
+            <div class="col-2 pr-0">
+                <select class="form-control" id="assetInput" name="asset">
+                    {% for asset in asset_list %}
+                        <option>{{asset.symbol}}</option>
+                    {% endfor %}
+                </select>
             </div>
         </div>
         <button type="submit" class="btn btn-primary col-3 mb-2">Submit</button>
@@ -44,7 +51,8 @@
                 <td>
                     <form method="POST" action="./remove_trade_on" onsubmit="return confirm('Are you sure you want this algo to no longer trade this asset?');">
                         {% csrf_token %}
-                        <input type="text" name="symbol" value="{{asset.symbol}}" hidden></input>
+                        <input type="text" name="algo" value="{{trade.algo.id}}" hidden></input>
+                        <input type="text" name="asset" value="{{trade.asset.symbol}}" hidden></input>
                         <button type="submit" class="btn btn-sm btn-warning">Remove</button>
                     </form>
                 </td>

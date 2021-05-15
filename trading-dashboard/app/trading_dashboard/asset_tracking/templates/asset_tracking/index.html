@@ -13,7 +13,7 @@
         {% csrf_token %}
         <div class="form-group row">
             <label class="col-1 col-form-label mr-2" for="assetSymbolInput">Symbol:</label>
-            <div class="col-2">
+            <div class="col-2 pr-0">
                 <input type="text" class="form-control mr-2 {% if error is not None %} is-invalid {% endif %}" id="assetSymbolInput" name="symbol" required>
                 <div class="invalid-feedback">
                     {{ error }}
@@ -22,7 +22,7 @@
         </div> 
         <div class="form-group row">
             <label class="col-1 col-form-label mr-2" for="assetSourceInput">Data Source:</label>
-            <div class="col-2">
+            <div class="col-2 pr-0">
                 <select class="form-control mr-2" id="assetSourceInput" name="source">
                     <option>None</option>
                     <option>YF</option>
