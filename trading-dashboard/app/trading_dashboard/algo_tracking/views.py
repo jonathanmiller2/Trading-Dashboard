@@ -1,7 +1,10 @@
+from decimal import *
+import math
+from datetime import datetime
 from django.shortcuts import render
 from django.db import IntegrityError
 from django.contrib.auth.decorators import login_required
-from .models import Algo, TradesOn, Asset
+from .models import Algo, TradesOn, Asset, Balance
 
 
 @login_required
@@ -10,6 +13,36 @@ def index(request):
     data['algos'] = Algo.objects.all()
 
     return render(request, 'algo_tracking/index.html', context=data)
+
+
+def add_algo(request):
+    data = {}
+
+    if request.method == 'POST':
+        try:
+            new_algo = Algo.objects.create(name=request.POST['algo_name'])
+            USD = Asset.objects.get(symbol__iexact='USD')
+            Balance.objects.create(timestamp=datetime.utcnow(), algo=new_algo, asset=USD, balance=request.POST['algo_startvalue'])
+
+        except IntegrityError as e:
+            print(e)
+            data['error'] = 'That trade is already being tracked.'
+
+    data['algos'] = Algo.objects.all()
+
+    return render(request, 'algo_tracking/index.html', context=data)
+
+
+def remove_algo(request):
+    data = {}
+
+    if request.method == 'POST':
+        Algo.objects.filter(name__exact=request.POST['algo_name']).delete()
+    
+    data['algos'] = Algo.objects.all()
+
+    return render(request, 'algo_tracking/index.html', context=data)
+
 
 def trades_on(request):
     data = {}

@@ -7,16 +7,15 @@ CREATE TABLE asset(
 
 DROP TABLE IF EXISTS algo CASCADE;
 CREATE TABLE algo(
-    id INT GENERATED ALWAYS AS IDENTITY,
     name TEXT NOT NULL,
-    PRIMARY KEY (id)
+    PRIMARY KEY (name)
 );
 
 DROP TABLE IF EXISTS trades_on CASCADE;
 CREATE TABLE trades_on(
-    algo_id INT REFERENCES algo (id) ON DELETE CASCADE,
+    algo TEXT REFERENCES algo (name) ON DELETE CASCADE,
     asset TEXT REFERENCES asset (symbol) ON DELETE CASCADE,
-    PRIMARY KEY (algo_id, asset)
+    PRIMARY KEY (algo, asset)
 );
 
 DROP TABLE IF EXISTS exchange_rate CASCADE;
@@ -31,20 +30,20 @@ CREATE TABLE exchange_rate (
 DROP TABLE IF EXISTS trade CASCADE;
 CREATE TABLE trade (
     timestamp timestamp, 
-    algo_id INT REFERENCES algo (id) ON DELETE CASCADE, 
+    algo TEXT REFERENCES algo (name) ON DELETE CASCADE, 
     from_asset TEXT REFERENCES asset (symbol) ON DELETE CASCADE, 
     to_asset TEXT REFERENCES asset (symbol) ON DELETE CASCADE, 
     amount NUMERIC NOT NULL, 
-    PRIMARY KEY(timestamp, algo_id, from_asset, to_asset)
+    PRIMARY KEY(timestamp, algo, from_asset, to_asset)
 );
 
 DROP TABLE IF EXISTS balance CASCADE;
 CREATE TABLE balance (
     timestamp timestamp, 
-    algo_id INT REFERENCES algo (id) ON DELETE CASCADE,  
+    algo TEXT REFERENCES algo (name) ON DELETE CASCADE,  
     asset TEXT REFERENCES asset (symbol) ON DELETE CASCADE,  
     balance NUMERIC NOT NULL, 
-    PRIMARY KEY(timestamp, algo_id, asset)
+    PRIMARY KEY(timestamp, algo, asset)
 );
 
 ----------------------------------------------------------------------
@@ -52,14 +51,13 @@ CREATE TABLE balance (
 
 CREATE OR REPLACE PROCEDURE make_trade(
     tick TIMESTAMP,
-    algo_name algo.name%TYPE,
+    algo algo.name%TYPE,
     from_asset asset.symbol%TYPE, 
     to_asset asset.symbol%TYPE,
     amount_bought balance.balance%TYPE
 ) 
 AS $$
 DECLARE
-    algo_id algo.id%TYPE;
     old_from_asset_balance balance.balance%TYPE;
     old_to_asset_balance balance.balance%TYPE;
     new_from_asset_balance balance.balance%TYPE;
@@ -68,9 +66,8 @@ DECLARE
     newest_rate exchange_rate.rate%TYPE;
 
 BEGIN
-    SELECT algo.id INTO algo_id FROM algo WHERE algo.name = algo_name;
-    SELECT COALESCE(balance.balance, 0) INTO old_from_asset_balance FROM balance WHERE balance.algo_id = algo_id AND balance.asset = from_asset ORDER BY balance.timestamp DESC;
-    SELECT COALESCE(balance.balance, 0) INTO old_to_asset_balance FROM balance WHERE balance.algo_id = algo_id AND balance.asset = to_asset ORDER BY balance.timestamp DESC;
+    SELECT COALESCE(balance.balance, 0) INTO old_from_asset_balance FROM balance WHERE balance.algo = algo AND balance.asset = from_asset ORDER BY balance.timestamp DESC;
+    SELECT COALESCE(balance.balance, 0) INTO old_to_asset_balance FROM balance WHERE balance.algo = algo AND balance.asset = to_asset ORDER BY balance.timestamp DESC;
 
     SELECT exchange_rate.rate INTO newest_rate FROM exchange_rate WHERE exchange_rate.from_asset = from_asset AND exchange_rate.to_asset = to_asset ORDER BY exchange_rate.timestamp DESC;
     IF newest_rate IS NULL
@@ -79,17 +76,17 @@ BEGIN
         newest_rate := 1 / newest_rate;
     END IF;
 
-    INSERT INTO trade (tick, algo_id, from_asset, to_asset, amount)
-    VALUES (tick, algo_id, from_asset, to_asset, amount);
+    INSERT INTO trade (tick, algo, from_asset, to_asset, amount)
+    VALUES (tick, algo, from_asset, to_asset, amount);
 
     new_from_asset_balance := old_from_asset_balance - amount_bought * rate;
     new_to_asset_balance := old_to_asset_balance + amount_bought;
 
-    INSERT INTO balance (timestamp, algo_id, asset, balance)
-    VALUES (tick, algo_id, from_asset, new_from_asset_balance);
+    INSERT INTO balance (timestamp, algo, asset, balance)
+    VALUES (tick, algo, from_asset, new_from_asset_balance);
 
-    INSERT INTO balance (timestamp, algo_id, asset, balance)
-    VALUES (tick, algo_id, to_asset, new_to_asset_balance);
+    INSERT INTO balance (timestamp, algo, asset, balance)
+    VALUES (tick, algo, to_asset, new_to_asset_balance);
 
     COMMIT;
 END;
@@ -98,7 +95,7 @@ LANGUAGE plpgsql;
 
 
 
-CREATE OR REPLACE FUNCTION get_total_balance(algo_id algo.id%TYPE, as_asset asset.symbol%TYPE) RETURNS TABLE(res_timestamp TIMESTAMP, res_total_balance NUMERIC) AS $$
+CREATE OR REPLACE FUNCTION get_total_balance(algo algo.name%TYPE, as_asset asset.symbol%TYPE) RETURNS TABLE(res_timestamp TIMESTAMP, res_total_balance NUMERIC) AS $$
 
 DECLARE
     raw_asset balance.balance%TYPE;
@@ -123,7 +120,7 @@ BEGIN
         LOOP
             SELECT COALESCE(balance.balance, 0) INTO amount
             FROM balance
-            WHERE balance.asset = asset.symbol AND balance.algo = algo_id AND balance.timestamp < tick
+            WHERE balance.asset = asset.symbol AND balance.algo = algo AND balance.timestamp < tick
             ORDER BY balance.timestamp DESC;
 
             IF asset == as_asset

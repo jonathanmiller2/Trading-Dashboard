@@ -45,9 +45,18 @@ for asset in assets:
 
 algostart = time.time()
 
-algo_files = ['./algos/' + f for f in os.listdir("./algos/")]
-for algo_file in algo_files:
-    subprocess.run(["python", algo_file])
+cur.execute("SELECT * FROM algo;")
+algos = cur.fetchall()
+
+for algo in algos:
+    algo_name = str(algo[0])
+    filename = "./algos/" + algo_name + ".py"
+    
+    cur.execute("SELECT * FROM trades_on WHERE algo=%s;", (algo_name,))
+    assets = cur.fetchall()
+
+    for asset in assets:
+        subprocess.run(["python", filename, asset[0]])
 
 algoend = time.time()
 

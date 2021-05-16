@@ -1,6 +1,5 @@
-import os
+import os, random, argparse
 import psycopg2
-import random
 
 from dotenv import load_dotenv
 load_dotenv(verbose=True)
@@ -17,8 +16,9 @@ cur = conn.cursor()
 cur.execute("INSERT INTO Algo (name) VALUES (%s) ON CONFLICT DO NOTHING;", ("RAND",))
 conn.commit()
 
-
-print(random.random())
+parser = argparse.ArgumentParser()
+parser.add_argument("asset")
+asset = parser.parse_args().asset
 
 cur.close()
 conn.close()
