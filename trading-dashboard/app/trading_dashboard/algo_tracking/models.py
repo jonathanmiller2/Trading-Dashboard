@@ -2,8 +2,7 @@ from django.db import models
 from trading_dashboard.asset_tracking.models import Asset
 
 class Algo(models.Model):
-    id = models.IntegerField(primary_key=True)
-    name = models.TextField()
+    name = models.TextField(primary_key=True)
 
     class Meta:
         managed = False
@@ -11,9 +10,10 @@ class Algo(models.Model):
 
 class Balance(models.Model):
     timestamp = models.DateTimeField(primary_key=True)
-    algo = models.ForeignKey(Algo, models.CASCADE)
+    algo = models.ForeignKey(Algo, models.CASCADE, db_column='algo')
     asset = models.ForeignKey(Asset, models.CASCADE, db_column='asset')
-    balance = models.DecimalField(max_digits=65535, decimal_places=65535)
+    
+    balance = models.DecimalField(max_digits=500, decimal_places=2)
 
     class Meta:
         managed = False
@@ -21,8 +21,8 @@ class Balance(models.Model):
         unique_together = (('timestamp', 'algo', 'asset'),)
 
 class TradesOn(models.Model):
-    algo = models.ForeignKey(Algo, models.DO_NOTHING, primary_key=True)
-    asset = models.ForeignKey(Asset, models.DO_NOTHING, db_column='asset')
+    algo = models.ForeignKey(Algo, models.CASCADE, db_column='algo', primary_key=True)
+    asset = models.ForeignKey(Asset, models.CASCADE, db_column='asset')
 
     class Meta:
         managed = False

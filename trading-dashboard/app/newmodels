@@ -9,8 +9,7 @@ from django.db import models
 
 
 class Algo(models.Model):
-    id = models.IntegerField(primary_key=True)
-    name = models.TextField()
+    name = models.TextField(primary_key=True)
 
     class Meta:
         managed = False
@@ -94,7 +93,7 @@ class AuthUserUserPermissions(models.Model):
 
 class Balance(models.Model):
     timestamp = models.DateTimeField(primary_key=True)
-    algo = models.ForeignKey(Algo, models.DO_NOTHING)
+    algo = models.ForeignKey(Algo, models.DO_NOTHING, db_column='algo')
     asset = models.ForeignKey(Asset, models.DO_NOTHING, db_column='asset')
     balance = models.DecimalField(max_digits=65535, decimal_places=65535)
 
@@ -148,6 +147,14 @@ class DjangoSession(models.Model):
         db_table = 'django_session'
 
 
+class ErrorReproduction(models.Model):
+    amount = models.DecimalField(primary_key=True, max_digits=65535, decimal_places=65535)
+
+    class Meta:
+        managed = False
+        db_table = 'error_reproduction'
+
+
 class ExchangeRate(models.Model):
     timestamp = models.DateTimeField(primary_key=True)
     from_asset = models.ForeignKey(Asset, models.DO_NOTHING, db_column='from_asset')
@@ -162,7 +169,7 @@ class ExchangeRate(models.Model):
 
 class Trade(models.Model):
     timestamp = models.DateTimeField(primary_key=True)
-    algo = models.ForeignKey(Algo, models.DO_NOTHING)
+    algo = models.ForeignKey(Algo, models.DO_NOTHING, db_column='algo')
     from_asset = models.ForeignKey(Asset, models.DO_NOTHING, db_column='from_asset')
     to_asset = models.ForeignKey(Asset, models.DO_NOTHING, db_column='to_asset')
     amount = models.DecimalField(max_digits=65535, decimal_places=65535)
@@ -174,7 +181,7 @@ class Trade(models.Model):
 
 
 class TradesOn(models.Model):
-    algo = models.ForeignKey(Algo, models.DO_NOTHING, primary_key=True)
+    algo = models.ForeignKey(Algo, models.DO_NOTHING, db_column='algo', primary_key=True)
     asset = models.ForeignKey(Asset, models.DO_NOTHING, db_column='asset')
 
     class Meta:

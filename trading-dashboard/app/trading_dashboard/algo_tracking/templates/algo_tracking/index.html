@@ -3,18 +3,48 @@
 {% block content %}
 
 <style>
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
 </style>
 
 <div>
     <h1>Trading Algorithms</h1>
     <hr class="my-4"/>
+    <h4>Add a New Algo:</h4>
+    <form class="mt-3 mb-4" method="POST" action="./add_algo">
+        {% csrf_token %}
+        <div class="form-group row">
+            <label class="col-1 col-form-label mr-2" for="algoNameInput">Name:</label>
+            <div class="col-2 pr-0">
+                <input type="text" class="form-control mr-2 {% if error is not None %} is-invalid {% endif %}" id="algoNameInput" name="algo_name" required>
+                <div class="invalid-feedback">
+                    {{ error }}
+                </div>
+            </div>
+        </div>
+        <div class="form-group row">
+            <label class="col-1 col-form-label mr-2" for="algoValueInput">Start value:</label>
+            <div class="input-group col-2 pr-0">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">$</div>
+                </div>
+                <input type="number" class="form-control" id="algoValueInput" name="algo_startvalue" required>
+            </div>
+        </div> 
+        <button type="submit" class="btn btn-primary col-3 mb-2">Submit</button>
+    </form>
+    <hr class="my-4"/>
     <h4>Algo List:</h4>
     <table class="table mt-4">
         <thead class="thead-light">
-            <th style="width: 24%" scope="col">Name</th>
-            <th style="width: 24%" scope="col">Net Worth</th>
-            <th style="width: 24%" scope="col">Sparkline</th>
-            <th style="width: 24%" scope="col">Today's Change</th>
+            <th style="width: 24%">Name</th>
+            <th style="width: 24%">Net Worth</th>
+            <th style="width: 24%">Sparkline</th>
+            <th style="width: 24%">Today's Change</th>
+            <th></th>
         </thead>
         <tbody>
             {% for algo in algos %}
@@ -23,12 +53,18 @@
                 <td></td>
                 <td></td>
                 <td></td>
+                <td>
+                    <form method="POST" action="./remove_algo" onsubmit="return confirm('Are you sure you want to remove this algo?');">
+                        {% csrf_token %}
+                        <input type="text" name="algo_name" value="{{algo.name}}" hidden></input>
+                        <button type="submit" class="btn btn-sm btn-warning">Remove</button>
+                    </form>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
-
 <script>
 </script>
 
