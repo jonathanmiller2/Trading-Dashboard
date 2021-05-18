@@ -51,9 +51,9 @@ CREATE TABLE balance (
 
 CREATE OR REPLACE PROCEDURE make_trade(
     tick TIMESTAMP,
-    algo algo.name%TYPE,
-    from_asset asset.symbol%TYPE, 
-    to_asset asset.symbol%TYPE,
+    given_algo algo.name%TYPE,
+    given_from_asset asset.symbol%TYPE, 
+    given_to_asset asset.symbol%TYPE,
     amount_bought balance.balance%TYPE
 ) 
 AS $$
@@ -66,29 +66,27 @@ DECLARE
     newest_rate exchange_rate.rate%TYPE;
 
 BEGIN
-    SELECT COALESCE(balance.balance, 0) INTO old_from_asset_balance FROM balance WHERE balance.algo = algo AND balance.asset = from_asset ORDER BY balance.timestamp DESC;
-    SELECT COALESCE(balance.balance, 0) INTO old_to_asset_balance FROM balance WHERE balance.algo = algo AND balance.asset = to_asset ORDER BY balance.timestamp DESC;
+    SELECT COALESCE(balance.balance, 0) INTO old_from_asset_balance FROM balance WHERE balance.algo = given_algo AND balance.asset = given_from_asset ORDER BY balance.timestamp DESC;
+    SELECT COALESCE(balance.balance, 0) INTO old_to_asset_balance FROM balance WHERE balance.algo = given_algo AND balance.asset = given_to_asset ORDER BY balance.timestamp DESC;
 
-    SELECT exchange_rate.rate INTO newest_rate FROM exchange_rate WHERE exchange_rate.from_asset = from_asset AND exchange_rate.to_asset = to_asset ORDER BY exchange_rate.timestamp DESC;
+    SELECT exchange_rate.rate INTO newest_rate FROM exchange_rate WHERE exchange_rate.from_asset = given_from_asset AND exchange_rate.to_asset = given_to_asset ORDER BY exchange_rate.timestamp DESC;
     IF newest_rate IS NULL
     THEN 
-        SELECT exchange_rate.rate INTO newest_rate FROM exchange_rate WHERE exchange_rate.from_asset = to_asset AND exchange_rate.to_asset = from_asset ORDER BY exchange_rate.timestamp DESC;
+        SELECT exchange_rate.rate INTO newest_rate FROM exchange_rate WHERE exchange_rate.from_asset = given_to_asset AND exchange_rate.to_asset = given_from_asset ORDER BY exchange_rate.timestamp DESC;
         newest_rate := 1 / newest_rate;
     END IF;
 
-    INSERT INTO trade (tick, algo, from_asset, to_asset, amount)
-    VALUES (tick, algo, from_asset, to_asset, amount);
+    INSERT INTO trade (timestamp, algo, from_asset, to_asset, amount)
+    VALUES (tick, given_algo, given_from_asset, given_to_asset, amount_bought);
 
-    new_from_asset_balance := old_from_asset_balance - amount_bought * rate;
-    new_to_asset_balance := old_to_asset_balance + amount_bought;
-
-    INSERT INTO balance (timestamp, algo, asset, balance)
-    VALUES (tick, algo, from_asset, new_from_asset_balance);
+    new_from_asset_balance := ROUND(old_from_asset_balance - amount_bought * newest_rate, 10);
+    new_to_asset_balance := ROUND(old_to_asset_balance + amount_bought, 10);
 
     INSERT INTO balance (timestamp, algo, asset, balance)
-    VALUES (tick, algo, to_asset, new_to_asset_balance);
+    VALUES (tick, given_algo, given_from_asset, new_from_asset_balance);
 
-    COMMIT;
+    INSERT INTO balance (timestamp, algo, asset, balance)
+    VALUES (tick, given_algo, given_to_asset, new_to_asset_balance);
 END;
 $$
 LANGUAGE plpgsql;

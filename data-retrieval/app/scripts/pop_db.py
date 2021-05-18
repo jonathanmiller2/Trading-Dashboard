@@ -1,13 +1,10 @@
 import os, subprocess, time, math, requests
 import psycopg2
 import yfinance as yf
-import pandas as pd
+from general_logging import print_and_log
 
 from dotenv import load_dotenv
 load_dotenv(verbose=True)
-
-from datetime import datetime
-from random import random
 
 sqlhost = os.environ.get('SQL_HOST')
 sqldb = os.environ.get('SQL_DATABASE')
@@ -34,11 +31,10 @@ for asset in assets:
 
         try:
             cur.execute('INSERT INTO exchange_rate (timestamp, from_asset, to_asset, rate) VALUES (%s, %s, %s, %s)', (newest_time, "USD", symbol, close))
-            print(f"Inserted new value:\t{newest_time}\t{close}")
             conn.commit()
 
         except psycopg2.errors.UniqueViolation:
-            print("ERROR: pop_db.py is trying to insert a timestamp that already exists in the table!")
+            print_and_log("ERROR: pop_db.py is trying to insert a timestamp that already exists in the table")
             conn.rollback()
 
 
@@ -51,8 +47,13 @@ algos = cur.fetchall()
 for algo in algos:
     algo_name = str(algo[0])
     filename = "./algos/" + algo_name + ".py"
+
+    if not os.path.exists(filename):
+        print_and_log("The file " + filename + " does not exist. Moving onto next algo.")
+        continue
     
-    cur.execute("SELECT * FROM trades_on WHERE algo=%s;", (algo_name,))
+    #TODO: Select once, not over and over again?
+    cur.execute("SELECT asset FROM trades_on WHERE algo=%s;", (algo_name,))
     assets = cur.fetchall()
 
     for asset in assets:
@@ -60,9 +61,11 @@ for algo in algos:
 
 algoend = time.time()
 
-f = open("exec_time.log", "a")
-f.write(str(math.trunc(algoend - algostart)) + "\n")
-f.close()
+timelog = open("./logs/exec_time.log", "a")
+timelog.write(str(math.trunc(algoend - algostart)) + "\n")
+timelog.close()
 
 cur.close()
 conn.close()
+
+

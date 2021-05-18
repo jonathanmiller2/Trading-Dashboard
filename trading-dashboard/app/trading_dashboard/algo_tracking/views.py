@@ -1,6 +1,6 @@
 from decimal import *
 import math
-from datetime import datetime
+from django.utils import timezone
 from django.shortcuts import render
 from django.db import IntegrityError
 from django.contrib.auth.decorators import login_required
@@ -22,7 +22,7 @@ def add_algo(request):
         try:
             new_algo = Algo.objects.create(name=request.POST['algo_name'])
             USD = Asset.objects.get(symbol__iexact='USD')
-            Balance.objects.create(timestamp=datetime.utcnow(), algo=new_algo, asset=USD, balance=request.POST['algo_startvalue'])
+            Balance.objects.create(timestamp=timezone.now(), algo=new_algo, asset=USD, balance=request.POST['algo_startvalue'])
 
         except IntegrityError as e:
             print(e)
@@ -62,6 +62,7 @@ def add_trade_on(request):
 
         try:
             TradesOn.objects.create(algo=algo, asset=asset)
+            Balance.objects.create(timestamp=timezone.now(), algo=algo, asset=asset, balance=0)
         except IntegrityError as e:
             data['error'] = 'That trade is already being tracked.'
     
