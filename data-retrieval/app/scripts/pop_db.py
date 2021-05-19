@@ -46,7 +46,7 @@ algos = cur.fetchall()
 
 for algo in algos:
     algo_name = str(algo[0])
-    filename = "./algos/" + algo_name + ".py"
+    filename = os.path.dirname(os.path.realpath(__file__)) + "/algos/" + algo_name + ".py"
 
     if not os.path.exists(filename):
         print_and_log("The file " + filename + " does not exist. Moving onto next algo.")
@@ -57,11 +57,11 @@ for algo in algos:
     assets = cur.fetchall()
 
     for asset in assets:
-        subprocess.run(["python", filename, asset[0]])
+        subprocess.run(["python", filename, asset[0]], shell=True)
 
 algoend = time.time()
 
-timelog = open("./logs/exec_time.log", "a")
+timelog = open(os.path.dirname(os.path.realpath(__file__)) + "/logs/exec_time.log", "a")
 timelog.write(str(math.trunc(algoend - algostart)) + "\n")
 timelog.close()
 
