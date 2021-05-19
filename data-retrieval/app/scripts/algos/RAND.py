@@ -12,9 +12,9 @@ load_dotenv(verbose=True)
 ALGO_NAME = "RAND"
 
 now = datetime.now()
-if (now.hour < 13) or (now.hour == 13 and now.minute < 30) or (now.hour > 19):
-    print_and_log('ERROR: Algo %s attempted to trade outside of market hours' % ALGO_NAME)
-    raise Exception('ERROR: Algo %s attempted to trade outside of market hours' % ALGO_NAME)
+#if (now.hour < 13) or (now.hour == 13 and now.minute < 30) or (now.hour > 19):
+#    print_and_log('ERROR: Algo %s attempted to trade outside of market hours' % ALGO_NAME)
+#    raise Exception('ERROR: Algo %s attempted to trade outside of market hours' % ALGO_NAME)
 
 sqlhost = os.environ.get('SQL_HOST')
 sqldb = os.environ.get('SQL_DATABASE')
@@ -41,7 +41,7 @@ newest_rate = cur.fetchone()[0]
 
 r = random.random()
 
-if r > 0.9 and cash_balance > 0:
+if r > 0.95 and cash_balance > 0:
     #Buy asset
     amount_bought = ((cash_balance * Decimal(0.25)) / newest_rate).quantize(Decimal(1), rounding=ROUND_DOWN)
 
