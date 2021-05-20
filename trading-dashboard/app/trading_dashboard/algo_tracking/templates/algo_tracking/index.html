@@ -8,6 +8,15 @@
         -webkit-appearance: none;
         margin: 0;
     }
+
+    .algoname {
+        color: black;
+        text-decoration: none;
+    }
+
+    .algoname:hover {
+        text-decoration: none;
+    }
 </style>
 
 <div>
@@ -49,7 +58,7 @@
         <tbody>
             {% for algo in algos %}
             <tr>
-                <th scope="row">{{algo.name}}</th>
+                <th><a class="algoname" href="/algos/details?algo={{algo.name}}">{{algo.name}}</a></th>
                 <td></td>
                 <td></td>
                 <td></td>

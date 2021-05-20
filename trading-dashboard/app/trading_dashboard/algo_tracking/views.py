@@ -1,11 +1,12 @@
 from decimal import *
-import math
+from django.http import HttpResponse
 from django.utils import timezone
 from django.shortcuts import render
-from django.db import IntegrityError
+from django.db import IntegrityError, connection
 from django.contrib.auth.decorators import login_required
 from .models import Algo, TradesOn, Asset, Balance
 
+import json, datetime
 
 @login_required
 def index(request):
@@ -84,3 +85,23 @@ def remove_trade_on(request):
     data['asset_list'] = Asset.objects.all().exclude(symbol__exact="USD")
 
     return render(request, 'algo_tracking/trades_on.html', context=data)
+
+def details(request):
+    return render(request, 'algo_tracking/details.html')
+
+def get_balance_record(request):
+    #TODO: Group averages to reduce network wait time?
+
+    algo = request.GET['algo']
+    period = request.GET['period'] + " hours"
+
+    cursor = connection.cursor()
+    cursor.callproc("get_total_balance", [algo, "USD", period, 1])
+    balances = cursor.fetchall()
+    cursor.close()
+    connection.close()
+
+    data = json.dumps(balances, default=str)
+
+    return HttpResponse(data)
+

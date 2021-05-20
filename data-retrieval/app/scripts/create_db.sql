@@ -93,7 +93,7 @@ LANGUAGE plpgsql;
 
 
 
-CREATE OR REPLACE FUNCTION get_total_balance(algo algo.name%TYPE, as_asset asset.symbol%TYPE) RETURNS TABLE(res_timestamp TIMESTAMP, res_total_balance NUMERIC) AS $$
+CREATE OR REPLACE FUNCTION get_total_balance(given_algo algo.name%TYPE, as_asset asset.symbol%TYPE, time_window INTERVAL, group_size INTEGER) RETURNS TABLE(res_timestamp TIMESTAMP, res_total_balance NUMERIC) AS $$
 
 DECLARE
     raw_asset balance.balance%TYPE;
@@ -102,39 +102,45 @@ DECLARE
     asset RECORD;
     rate exchange_rate.rate%TYPE;
     amount balance.balance%TYPE;
+    first_balance_tick TIMESTAMP;
 
 BEGIN
+    SELECT balance.timestamp INTO first_balance_tick FROM balance WHERE balance.algo = given_algo ORDER BY balance.timestamp ASC LIMIT 1;
+
     FOR tick IN
-        SELECT exchange_rate.timestamp FROM exchange_rate
+        SELECT exchange_rate.timestamp FROM exchange_rate WHERE exchange_rate.timestamp > (now() - time_window) AND exchange_rate.timestamp >= first_balance_tick
         UNION
-        SELECT trade.timestamp FROM trade
+        SELECT trade.timestamp FROM trade WHERE trade.timestamp > (now() - time_window) AND trade.algo = given_algo
         UNION
-        SELECT balance.timestamp FROM balance 
+        SELECT balance.timestamp FROM balance WHERE balance.timestamp > (now() - time_window) AND balance.algo = given_algo
+        ORDER BY timestamp ASC
     LOOP
         sum := 0;
 
         FOR asset IN
             SELECT symbol FROM asset
         LOOP
-            SELECT COALESCE(balance.balance, 0) INTO amount
+            SELECT balance.balance INTO amount
             FROM balance
-            WHERE balance.asset = asset.symbol AND balance.algo = algo AND balance.timestamp < tick
+            WHERE balance.asset = asset.symbol AND balance.algo = given_algo AND balance.timestamp <= tick
             ORDER BY balance.timestamp DESC;
 
-            IF asset == as_asset
+            amount := COALESCE(amount, 0);
+
+            IF asset.symbol = as_asset
             THEN
                 rate := 1;
             ELSE
                 SELECT exchange_rate.rate INTO rate
                 FROM exchange_rate
-                WHERE exchange_rate.from_asset = as_asset AND exchange_rate.to_asset = asset.symbol AND exchange_rate.timestamp < tick
+                WHERE exchange_rate.from_asset = as_asset AND exchange_rate.to_asset = asset.symbol AND exchange_rate.timestamp <= tick
                 ORDER BY exchange_rate.timestamp DESC;
 
                 IF rate IS NULL
                 THEN
                     SELECT exchange_rate.rate INTO rate
                     FROM exchange_rate
-                    WHERE exchange_rate.from_asset = asset.symbol AND exchange_rate.to_asset = as_asset AND exchange_rate.timestamp < tick
+                    WHERE exchange_rate.from_asset = asset.symbol AND exchange_rate.to_asset = as_asset AND exchange_rate.timestamp <= tick
                     ORDER BY exchange_rate.timestamp DESC;
 
                     rate := 1 / rate;
@@ -142,6 +148,7 @@ BEGIN
             END IF;
 
             sum := sum + rate * amount;
+
         END LOOP;
         
         res_timestamp := tick;

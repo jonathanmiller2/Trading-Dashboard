@@ -9,4 +9,6 @@ urlpatterns = [
     path('trades_on', trading_dashboard.algo_tracking.views.trades_on),
     path('add_trade_on', trading_dashboard.algo_tracking.views.add_trade_on),
     path('remove_trade_on', trading_dashboard.algo_tracking.views.remove_trade_on),
+    path('details', trading_dashboard.algo_tracking.views.details),
+    path('get_balance_record', trading_dashboard.algo_tracking.views.get_balance_record),
 ]
