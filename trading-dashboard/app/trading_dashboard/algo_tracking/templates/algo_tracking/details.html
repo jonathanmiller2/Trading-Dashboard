@@ -1,0 +1,193 @@
+{% extends "algo_tracking/base.html" %}
+
+{% block content %}
+<style>
+</style>
+
+<div>
+    <div class="btn-toolbar ml-5 mt-5">
+        <div id="chart-period-group" class="btn-group mx-2">
+            <button type="button" class="btn btn-sm btn-secondary" data-hours=1>1H</button>
+            <button type="button" class="btn btn-sm btn-secondary" data-hours=3>3H</button>
+            <button type="button" class="btn btn-sm btn-secondary" data-hours=24>1D</button>
+            <button type="button" class="btn btn-sm btn-secondary" data-hours=120>5D</button>
+            <button type="button" class="btn btn-sm btn-secondary" data-hours=720>1M</button>
+            <button type="button" class="btn btn-sm btn-secondary" data-hours=2160>3M</button>
+            <button type="button" class="btn btn-sm btn-secondary" data-hours=4320>6M</button>
+            <button type="button" class="btn btn-sm btn-secondary" data-hours=8760>1Y</button>
+            <button type="button" class="btn btn-sm btn-secondary" data-hours=17520>2Y</button>
+            <button type="button" class="btn btn-sm btn-secondary" data-hours=43800>5Y</button>
+        </div>
+    </div>
+
+    <div id="chart"></div>
+
+    <p id="val" class="ml-5"></p>
+</div>
+
+<script>
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const algo = urlParams.get('algo');
+
+    var data = []
+    // set the dimensions and margins of the graph
+    var margin = {top: 10, right: 10, bottom: 30, left: 50};
+    var width = 960 - margin.left - margin.right;
+    var height = 500 - margin.top - margin.bottom;
+
+    // append the svg obgect to the body of the page
+    // appends a 'group' element to 'svg'
+    // moves the 'group' element to the top left margin
+    var svg = d3.select("#chart").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    
+    // Add a path rectangle around the chart, such that nothing shows beyond the chart bounds when panning
+    svg.append("clipPath")
+        .attr("id", "clip-1")
+    .append("rect")
+        .attr("width", width)
+        .attr("height", height);
+    
+    // Add a rectangle to the svg to trigger zoom events
+    var rect = svg.append("rect")
+        .attr("width", width)
+        .attr("height", height)
+        .style("fill", "none")
+        .style("pointer-events", "all");
+
+    // set the ranges
+    var x = d3.scaleTime().range([0, width]);
+    var y = d3.scaleLinear().range([height, 0]);
+    
+    // Add the X Axis
+    svg.append("g")
+        .attr("id", "xaxis")
+        .attr("transform", "translate(0," + height + ")")
+
+    // Add the Y Axis
+    svg.append("g")
+        .attr("id", "yaxis")
+    
+    // define the line
+    valueline = (given_data, given_x_function) => d3.line()
+        .curve(d3.curveStepAfter)
+        .x(d => given_x_function(d.date))
+        .y(d => y(d.value))
+        (given_data)
+
+    // Add the valueline path.
+    path = svg.append("path")
+        .data([data])
+        .attr('id', 'chartline')
+        .attr("clip-path", "url(#clip-1)")
+        .attr("class", "line")
+        .attr("d", valueline(data, x));
+
+    // Create zoom
+    const zoom = d3.zoom()
+        .scaleExtent([1, 30])
+        .extent([[margin.left, 0], [width - margin.right, height]])
+        .translateExtent([[margin.left, -Infinity], [width - margin.right, Infinity]])
+        .on("zoom", zoomed);
+    
+    // Zoom handler
+    function zoomed(event) {
+        const xz = event.transform.rescaleX(x);
+        path.attr("d", valueline(data, xz));
+
+        svg.select("#xaxis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(xz));
+    }
+
+    //Apply zoom to chart
+    svg.call(zoom)
+    .transition()
+      .duration(750)
+      .call(zoom.scaleTo, 1);
+
+    function render() {
+        // Scale the range of the data
+        x.domain(d3.extent(data, d => d.date));
+        y.domain([d3.min(data, d => d.value), d3.max(data, d => d.value)]);
+
+        //Update x axis
+        svg.select("#xaxis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x));
+
+        //Update y axis
+        svg.select("#yaxis")
+            .call(d3.axisLeft(y));
+
+        // Add the valueline path.
+        svg.select("#chartline")
+            .data([data])
+            .attr("clip-path", "url(#clip-1)")
+            .attr("class", "line")
+            .attr("d", valueline(data, x));
+    }
+    
+    function newVal() {
+        $.ajax({
+            url: "get_newest_val",
+            type: "get",
+            data: {
+                algo: algo,
+            },
+            success: function(response) {
+                jsonresponse = JSON.parse(response);
+                time = new Date(jsonresponse[0].pk+'Z');
+                val = jsonresponse[0].fields.val;
+                document.getElementById("val").innerHTML = document.getElementById("val").innerHTML + "(" + time  + ", &ensp;" + val + ")" + "<br/>";
+                data.push({
+                    date: time,
+                    value: parseFloat(val)
+                });
+                console.log(data);
+                render();
+            }
+        });
+    }
+    // newVal();
+    // setInterval(newVal, 60000);
+
+
+    $('#chart-period-group').children().each(function () {
+        $(this).click(function() {
+            let period = $(event.target).data('hours');
+
+            $.ajax({
+                url: "get_balance_record",
+                type: "get",
+                data: {
+                    algo: algo,
+                    period: period
+                },
+                success: function(response) {
+                    console.log(response)
+                    data = []
+                    jsonresponse = JSON.parse(response);
+
+                    document.getElementById("val").innerHTML = "";
+                    jsonresponse.forEach(point => {
+                        time = new Date(point[0]+'Z');
+                        val = point[1];
+                        data.push({
+                            date: time,
+                            value: parseFloat(val)
+                        });
+                        document.getElementById("val").innerHTML = document.getElementById("val").innerHTML + "(" + time  + ", &ensp;" + val + ")" + "<br/>";
+                    });
+                    console.log(data);
+                    render();
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
