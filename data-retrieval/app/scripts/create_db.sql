@@ -48,7 +48,7 @@ CREATE TABLE balance (
 
 ----------------------------------------------------------------------
 
-
+DROP FUNCTION IF EXISTS make_trade;
 CREATE OR REPLACE PROCEDURE make_trade(
     tick TIMESTAMP,
     given_algo algo.name%TYPE,
@@ -92,11 +92,10 @@ $$
 LANGUAGE plpgsql;
 
 
-
+DROP FUNCTION IF EXISTS get_total_balance;
 CREATE OR REPLACE FUNCTION get_total_balance(given_algo algo.name%TYPE, as_asset asset.symbol%TYPE, time_window INTERVAL, group_size INTEGER) RETURNS TABLE(res_timestamp TIMESTAMP, res_total_balance NUMERIC) AS $$
 
 DECLARE
-    raw_asset balance.balance%TYPE;
     sum balance.balance%TYPE;
     tick TIMESTAMP;
     asset RECORD;
@@ -126,6 +125,7 @@ BEGIN
             ORDER BY balance.timestamp DESC;
 
             amount := COALESCE(amount, 0);
+            CONTINUE WHEN amount = 0;
 
             IF asset.symbol = as_asset
             THEN
@@ -148,7 +148,7 @@ BEGIN
             END IF;
 
             sum := sum + rate * amount;
-
+            RAISE NOTICE 'Tick:(%), Algo:(%), Asset:(%), Amount:(%), FBT(%), Rate:(%), Sum:(%)', tick, given_algo, asset, amount, first_balance_tick, rate, sum;
         END LOOP;
         
         res_timestamp := tick;

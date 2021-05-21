@@ -63,7 +63,6 @@ def add_trade_on(request):
 
         try:
             TradesOn.objects.create(algo=algo, asset=asset)
-            Balance.objects.create(timestamp=timezone.now(), algo=algo, asset=asset, balance=0)
         except IntegrityError as e:
             data['error'] = 'That trade is already being tracked.'
     
@@ -95,11 +94,15 @@ def get_balance_record(request):
     algo = request.GET['algo']
     period = request.GET['period'] + " hours"
 
+    print(algo + " USD " + period)
+
     cursor = connection.cursor()
     cursor.callproc("get_total_balance", [algo, "USD", period, 1])
     balances = cursor.fetchall()
     cursor.close()
     connection.close()
+
+    print(balances)
 
     data = json.dumps(balances, default=str)
 
