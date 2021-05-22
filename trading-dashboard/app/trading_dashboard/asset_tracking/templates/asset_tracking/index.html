@@ -3,6 +3,15 @@
 {% block content %}
 
 <style>
+
+    .assetname {
+        color: black;
+        text-decoration: none;
+    }
+
+    .assetname:hover {
+        text-decoration: none;
+    }
 </style>
 
 <div>
@@ -44,7 +53,7 @@
         <tbody>
             {% for asset in assets %}
             <tr>
-                <th scope="row">{{asset.symbol}}</th>
+                <th><a class="assetname" href="/assets/details?asset={{asset.symbol}}">{{asset.symbol}}</a></th>
                 <td>{{asset.source}}</td>
                 <td></td>
                 <td></td>

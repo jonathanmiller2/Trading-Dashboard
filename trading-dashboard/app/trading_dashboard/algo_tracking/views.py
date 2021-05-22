@@ -6,7 +6,7 @@ from django.db import IntegrityError, connection
 from django.contrib.auth.decorators import login_required
 from .models import Algo, TradesOn, Asset, Balance
 
-import json, datetime
+import json
 
 @login_required
 def index(request):

@@ -5,9 +5,9 @@
 </style>
 
 <div>
-    <h1>{{ request.GET.algo }}</h1>
+    <h1>{{ request.GET.asset }}</h1>
     <hr class="my-4"/>
-    <h4>Balance Chart:</h4>
+    <h4>Exchange Rate to USD Chart:</h4>
     <div class="btn-toolbar ml-5 mt-5">
         <div id="chart-period-group" class="btn-group mx-2">
             <button type="button" class="btn btn-sm btn-secondary" data-hours=1>1H</button>
@@ -31,7 +31,7 @@
 <script>
 
     const urlParams = new URLSearchParams(window.location.search);
-    const algo = urlParams.get('algo');
+    const asset = urlParams.get('asset');
 
     var data = []
     // set the dimensions and margins of the graph
@@ -165,21 +165,22 @@
             let period = $(event.target).data('hours');
 
             $.ajax({
-                url: "get_balance_record",
+                url: "get_rate_record",
                 type: "get",
                 data: {
-                    algo: algo,
+                    asset: asset,
                     period: period
                 },
                 success: function(response) {
-                    console.log(response)
                     data = []
                     jsonresponse = JSON.parse(response);
 
+                    console.log(jsonresponse);
+
                     document.getElementById("val").innerHTML = "";
                     jsonresponse.forEach(point => {
-                        time = new Date(point[0]+'Z');
-                        val = point[1];
+                        time = new Date(point.pk+'Z');
+                        val = point.fields.rate;
                         data.push({
                             date: time,
                             value: parseFloat(val)
