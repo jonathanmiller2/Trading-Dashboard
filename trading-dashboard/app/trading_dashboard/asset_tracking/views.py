@@ -15,7 +15,7 @@ def index(request):
 
     return render(request, 'asset_tracking/index.html', context=data)
 
-
+@login_required
 def track_asset(request):
     data = {}
 
@@ -29,7 +29,7 @@ def track_asset(request):
 
     return render(request, 'asset_tracking/index.html', context=data)
 
-
+@login_required
 def untrack_asset(request):
     data = {}
 
@@ -40,6 +40,7 @@ def untrack_asset(request):
 
     return render(request, 'asset_tracking/index.html', context=data)
 
+@login_required
 def details(request):
     return render(request, 'asset_tracking/details.html')
 

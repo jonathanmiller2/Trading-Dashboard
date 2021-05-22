@@ -46,7 +46,7 @@ algos = cur.fetchall()
 
 for algo in algos:
     algo_name = str(algo[0])
-    filename = os.path.dirname(os.path.realpath(__file__)) + "/algos/" + algo_name + ".py"
+    filename = os.path.dirname(os.path.realpath(__file__)) + "/algos/" + algo_name + '/' + algo_name + ".py"
 
     if not os.path.exists(filename):
         print_and_log("The file " + filename + " does not exist. Moving onto next algo.")
