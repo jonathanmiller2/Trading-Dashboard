@@ -15,7 +15,7 @@ def index(request):
 
     return render(request, 'algo_tracking/index.html', context=data)
 
-
+@login_required
 def add_algo(request):
     data = {}
 
@@ -33,7 +33,7 @@ def add_algo(request):
 
     return render(request, 'algo_tracking/index.html', context=data)
 
-
+@login_required
 def remove_algo(request):
     data = {}
 
@@ -44,7 +44,7 @@ def remove_algo(request):
 
     return render(request, 'algo_tracking/index.html', context=data)
 
-
+@login_required
 def trades_on(request):
     data = {}
     data['trades_on'] = TradesOn.objects.all()
@@ -53,7 +53,7 @@ def trades_on(request):
 
     return render(request, 'algo_tracking/trades_on.html', context=data)
 
-    
+@login_required
 def add_trade_on(request):
     data = {}
 
@@ -72,7 +72,7 @@ def add_trade_on(request):
 
     return render(request, 'algo_tracking/trades_on.html', context=data)
 
-
+@login_required
 def remove_trade_on(request):
     data = {}
 
@@ -85,6 +85,7 @@ def remove_trade_on(request):
 
     return render(request, 'algo_tracking/trades_on.html', context=data)
 
+@login_required
 def details(request):
     return render(request, 'algo_tracking/details.html')
 
