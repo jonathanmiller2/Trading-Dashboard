@@ -3,10 +3,12 @@ import psycopg2
 import yfinance as yf
 from general_logging import print_and_log
 
-print(os.getcwd())
-
 from dotenv import load_dotenv
 load_dotenv(verbose=True)
+
+
+
+
 
 sqlhost = os.environ.get('SQL_HOST')
 sqldb = os.environ.get('SQL_DATABASE')
@@ -52,18 +54,20 @@ algostart = time.time()
 cur.execute("SELECT * FROM algo;")
 algos = cur.fetchall()
 
-for algo in algos:
-
+def run_algo(algo):
     algo_name = str(algo[0])
     filename = os.path.dirname(os.path.realpath(__file__)) + "/algos/" + algo_name + '/' + algo_name + ".py"
 
     if not os.path.exists(filename):
         print_and_log("The file " + filename + " does not exist. Moving onto next algo.")
-        continue
+        return
 
     spec = importlib.util.spec_from_file_location(algo_name+"_module", filename)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+
+with multiprocessing.Pool() as p:
+    p.map(run_algo, algos)
 
 algoend = time.time()
 
