@@ -1,7 +1,9 @@
-import os, subprocess, time, math, requests
+import os, subprocess, time, math, requests, importlib, multiprocessing
 import psycopg2
 import yfinance as yf
 from general_logging import print_and_log
+
+print(os.getcwd())
 
 from dotenv import load_dotenv
 load_dotenv(verbose=True)
@@ -24,10 +26,16 @@ for asset in assets:
     source = asset[1]
 
     if(source == 'YF'):
+        
         yticker = yf.Ticker(symbol)
         df = yticker.history(period='1d', interval='1m')
-        close = df['Close'].iloc[-1]
-        newest_time = df.index[-1]
+        
+        try:
+            close = df['Close'].iloc[-1]
+            newest_time = df.index[-1]
+        except IndexError:
+            print_and_log("ERROR: No yahoo finance data for the asset %s can be found. The asset symbol may be incorrect." % (symbol,))
+            continue
 
         try:
             cur.execute('INSERT INTO exchange_rate (timestamp, from_asset, to_asset, rate) VALUES (%s, %s, %s, %s)', (newest_time, "USD", symbol, close))
@@ -45,19 +53,17 @@ cur.execute("SELECT * FROM algo;")
 algos = cur.fetchall()
 
 for algo in algos:
+
     algo_name = str(algo[0])
     filename = os.path.dirname(os.path.realpath(__file__)) + "/algos/" + algo_name + '/' + algo_name + ".py"
 
     if not os.path.exists(filename):
         print_and_log("The file " + filename + " does not exist. Moving onto next algo.")
         continue
-    
-    #TODO: Select once, not over and over again?
-    cur.execute("SELECT asset FROM trades_on WHERE algo=%s;", (algo_name,))
-    assets = cur.fetchall()
 
-    for asset in assets:
-        subprocess.run(["python", filename, asset[0]], shell=True)
+    spec = importlib.util.spec_from_file_location(algo_name+"_module", filename)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
 
 algoend = time.time()
 
