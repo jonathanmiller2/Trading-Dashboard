@@ -7,6 +7,8 @@ from django.contrib.auth.decorators import login_required
 from .models import Algo, TradesOn, Asset, Balance
 
 import json
+import pandas as pd
+import numpy as np
 
 @login_required
 def index(request):
@@ -90,22 +92,30 @@ def details(request):
     return render(request, 'algo_tracking/details.html')
 
 def get_balance_record(request):
-    #TODO: Group averages to reduce network wait time?
-
     algo = request.GET['algo']
-    period = request.GET['period'] + " hours"
-
-    print(algo + " USD " + period)
+    period_hours = int(request.GET['period'])
+    period_delta = request.GET['period'] + " hours"
 
     cursor = connection.cursor()
-    cursor.callproc("get_total_balance", [algo, "USD", period, 1])
+    cursor.callproc("get_total_balance", [algo, "USD", period_delta, 1])
     balances = cursor.fetchall()
     cursor.close()
     connection.close()
 
-    print(balances)
+    df = pd.DataFrame.from_records(balances, columns=['Time', 'Balance'], coerce_float=True)
 
-    data = json.dumps(balances, default=str)
+    if period_hours >= 1000:
+        #Group by day
+        groupkey=pd.to_datetime(df.Time.dt.strftime('%Y-%m-%d'))
+        res = df.groupby(groupkey).agg({'Time':'last', 'Balance':'mean'}).to_json(date_format='iso', orient="values")
 
-    return HttpResponse(data)
+    elif period_hours >= 100:
+        #Group by hour
+        groupkey=pd.to_datetime(df.Time.dt.strftime('%Y-%m-%d %H'))
+        res = df.groupby(groupkey).agg({'Time':'last', 'Balance':'mean'}).to_json(date_format='iso', orient="values")
+    
+    else:
+        res = df.to_json(date_format='iso', orient="values")
+
+    return HttpResponse(res)
 

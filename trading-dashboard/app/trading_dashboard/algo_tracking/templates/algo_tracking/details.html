@@ -77,18 +77,13 @@
     
     // define the line
     valueline = (given_data, given_x_function) => d3.line()
-        .curve(d3.curveStepAfter)
+        .curve(d3.curveStepBefore)
         .x(d => given_x_function(d.date))
         .y(d => y(d.value))
-        (given_data)
 
     // Add the valueline path.
     path = svg.append("path")
-        .data([data])
         .attr('id', 'chartline')
-        .attr("clip-path", "url(#clip-1)")
-        .attr("class", "line")
-        .attr("d", valueline(data, x));
 
     // Create zoom
     const zoom = d3.zoom()
@@ -129,10 +124,13 @@
 
         // Add the valueline path.
         svg.select("#chartline")
-            .data([data])
+            .datum(data)
+            .attr("fill", "none")
+            .attr("stroke", "black")
+            .attr("stroke-width", 3)
             .attr("clip-path", "url(#clip-1)")
-            .attr("class", "line")
             .attr("d", valueline(data, x));
+
     }
     
     function newVal() {
@@ -151,7 +149,6 @@
                     date: time,
                     value: parseFloat(val)
                 });
-                console.log(data);
                 render();
             }
         });
@@ -172,13 +169,12 @@
                     period: period
                 },
                 success: function(response) {
-                    console.log(response)
                     data = []
                     jsonresponse = JSON.parse(response);
 
                     document.getElementById("val").innerHTML = "";
                     jsonresponse.forEach(point => {
-                        time = new Date(point[0]+'Z');
+                        time = new Date(point[0]);
                         val = point[1];
                         data.push({
                             date: time,
@@ -186,7 +182,6 @@
                         });
                         document.getElementById("val").innerHTML = document.getElementById("val").innerHTML + "(" + time  + ", &ensp;" + val + ")" + "<br/>";
                     });
-                    console.log(data);
                     render();
                 }
             });
