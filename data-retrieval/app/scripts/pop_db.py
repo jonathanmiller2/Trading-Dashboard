@@ -1,4 +1,4 @@
-import os, subprocess, time, math, requests, importlib, multiprocessing
+import sys, os, subprocess, time, math, requests, importlib, multiprocessing
 import psycopg2
 import yfinance as yf
 from general_logging import print_and_log
@@ -46,6 +46,7 @@ for asset in assets:
         except psycopg2.errors.UniqueViolation:
             print_and_log("ERROR: pop_db.py is trying to insert a timestamp that already exists in the table")
             conn.rollback()
+            sys.exit()
 
 
 
