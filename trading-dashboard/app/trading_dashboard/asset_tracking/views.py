@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from .models import Asset, ExchangeRate
 
 import json
+import pandas as pd
 
 @login_required
 def index(request):
@@ -46,12 +47,30 @@ def details(request):
 
 def get_rate_record(request):
     #TODO: Group averages to reduce network wait time?
-    period = int(request.GET['period'])
+    period_hours = int(request.GET['period'])
     symbol = request.GET['asset']
 
     asset = Asset.objects.get(symbol=symbol)
     USD = Asset.objects.get(symbol='USD')
 
-    query = ExchangeRate.objects.filter(timestamp__lte=datetime.now(), timestamp__gt=datetime.now()-timedelta(hours=period), from_asset=USD, to_asset=asset).order_by('timestamp')
-    data = serializers.serialize('json', query)
-    return HttpResponse(data)
+    query = ExchangeRate.objects.filter(timestamp__lte=datetime.now(), timestamp__gt=datetime.now()-timedelta(hours=period_hours), from_asset=USD, to_asset=asset).order_by('timestamp')
+
+    if query.count() == 0:
+        return HttpResponse('[]')
+
+    df = pd.DataFrame.from_records(list(query.values('timestamp', 'rate')), columns=['timestamp', 'rate'], coerce_float=True)
+
+    if period_hours >= 1000:
+        #Group by day
+        groupkey=pd.to_datetime(df.timestamp.dt.strftime('%Y-%m-%d'))
+        res = df.groupby(groupkey).agg({'timestamp':'last', 'rate':'mean'}).to_json(date_format='iso', orient="values")
+
+    elif period_hours >= 100:
+        #Group by hour
+        groupkey=pd.to_datetime(df.timestamp.dt.strftime('%Y-%m-%d %H'))
+        res = df.groupby(groupkey).agg({'timestamp':'last', 'rate':'mean'}).to_json(date_format='iso', orient="values")
+    
+    else:
+        res = df.to_json(date_format='iso', orient="values")
+
+    return HttpResponse(res)

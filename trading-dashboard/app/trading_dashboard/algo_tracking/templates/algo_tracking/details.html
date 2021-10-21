@@ -77,7 +77,7 @@
     
     // define the line
     valueline = (given_data, given_x_function) => d3.line()
-        .curve(d3.curveStepBefore)
+        .curve(d3.curveStepAfter)
         .x(d => given_x_function(d.date))
         .y(d => y(d.value))
 

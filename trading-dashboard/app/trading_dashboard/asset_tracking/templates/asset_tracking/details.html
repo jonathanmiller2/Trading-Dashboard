@@ -84,11 +84,7 @@
 
     // Add the valueline path.
     path = svg.append("path")
-        .data([data])
         .attr('id', 'chartline')
-        .attr("clip-path", "url(#clip-1)")
-        .attr("class", "line")
-        .attr("d", valueline(data, x));
 
     // Create zoom
     const zoom = d3.zoom()
@@ -129,9 +125,11 @@
 
         // Add the valueline path.
         svg.select("#chartline")
-            .data([data])
+            .datum(data)
+            .attr("fill", "none")
+            .attr("stroke", "black")
+            .attr("stroke-width", 3)
             .attr("clip-path", "url(#clip-1)")
-            .attr("class", "line")
             .attr("d", valueline(data, x));
     }
     
@@ -179,8 +177,8 @@
 
                     document.getElementById("val").innerHTML = "";
                     jsonresponse.forEach(point => {
-                        time = new Date(point.pk+'Z');
-                        val = point.fields.rate;
+                        time = new Date(point[0]);
+                        val = point[1];
                         data.push({
                             date: time,
                             value: parseFloat(val)

@@ -8,7 +8,6 @@ from .models import Algo, TradesOn, Asset, Balance
 
 import json
 import pandas as pd
-import numpy as np
 
 @login_required
 def index(request):
@@ -101,6 +100,9 @@ def get_balance_record(request):
     balances = cursor.fetchall()
     cursor.close()
     connection.close()
+
+    if len(balances) == 0:
+        return HttpResponse('[]')
 
     df = pd.DataFrame.from_records(balances, columns=['Time', 'Balance'], coerce_float=True)
 
