@@ -8,6 +8,10 @@ from .models import Algo, TradesOn, Asset, Balance
 
 import json
 import pandas as pd
+<<<<<<< HEAD
+=======
+import numpy as np
+>>>>>>> a0799a6f0cc5eb5bd9216e872f1b0e7305042370
 
 @login_required
 def index(request):
