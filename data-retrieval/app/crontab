@@ -1,7 +1,9 @@
-# 8:30 to 9
-30-59/1 13 * * 1-5 /usr/local/bin/python /code/scripts/pop_db.py >> /var/log/cron.log 2>&1
+CRON_TZ="UTC"
 
-# 9 to 3
- * 14-19 * * 1-5 /usr/local/bin/python /code/scripts/pop_db.py >> /var/log/cron.log 2>&1
- 
+# 9:30 to 10
+30-59/1 9 * * 1-5 /usr/local/bin/python /code/scripts/pop_db.py >> /var/log/cron.log 2>&1
+
+# 10 to 4
+* 10-16 * * 1-5 /usr/local/bin/python /code/scripts/pop_db.py >> /var/log/cron.log 2>&1
+
 # cron requires blank last line

@@ -6,10 +6,6 @@ from general_logging import print_and_log
 from dotenv import load_dotenv
 load_dotenv(verbose=True)
 
-
-
-
-
 sqlhost = os.environ.get('SQL_HOST')
 sqldb = os.environ.get('SQL_DATABASE')
 sqlusr = os.environ.get('SQL_USER')
@@ -40,7 +36,7 @@ for asset in assets:
             continue
 
         try:
-            cur.execute('INSERT INTO exchange_rate (timestamp, from_asset, to_asset, rate) VALUES (%s, %s, %s, %s)', (newest_time, "USD", symbol, close))
+            cur.execute("CALL update_price(%s, %s, %s, %s);", (newest_time, "USD", symbol, close))
             conn.commit()
 
         except psycopg2.errors.UniqueViolation:
