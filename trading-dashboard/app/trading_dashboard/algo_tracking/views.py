@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.shortcuts import render
 from django.db import IntegrityError, connection
 from django.contrib.auth.decorators import login_required
-from .models import Algo, TradesOn, Asset, Balance
+from .models import Algo, TradesOn, Asset, Balance, AlgoTotal
 
 import json
 import pandas as pd
@@ -23,13 +23,14 @@ def add_algo(request):
 
     if request.method == 'POST':
         try:
-            new_algo = Algo.objects.create(name=request.POST['algo_name'])
-            USD = Asset.objects.get(symbol__iexact='USD')
-            Balance.objects.create(timestamp=timezone.now(), algo=new_algo, asset=USD, balance=request.POST['algo_startvalue'])
+            cursor = connection.cursor()
+            cursor.execute("CALL register_algo(%s, %s);", (request.POST['algo_name'], request.POST['algo_startvalue']))
+            cursor.close()
+            connection.close()
 
         except IntegrityError as e:
             print(e)
-            data['error'] = 'That trade is already being tracked.'
+            data['error'] = 'Database error.'
 
     data['algos'] = Algo.objects.all()
 
@@ -94,13 +95,7 @@ def details(request):
 def get_balance_record(request):
     algo = request.GET['algo']
     period_hours = int(request.GET['period'])
-    period_delta = request.GET['period'] + " hours"
-
-    cursor = connection.cursor()
-    cursor.callproc("get_total_balance", [algo, "USD", period_delta, 1])
-    balances = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    balances = list(AlgoTotal.objects.filter(algo=algo).values_list('timestamp', 'total_balance'))
 
     if len(balances) == 0:
         return HttpResponse('[]')

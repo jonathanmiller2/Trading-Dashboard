@@ -28,3 +28,14 @@ class TradesOn(models.Model):
         managed = False
         db_table = 'trades_on'
         unique_together = (('algo', 'asset'),)
+
+
+class AlgoTotal(models.Model):
+    timestamp = models.DateTimeField(primary_key=True)
+    algo = models.ForeignKey(Algo, models.CASCADE, db_column='algo')
+    total_balance = models.DecimalField(max_digits=65535, decimal_places=65535)
+
+    class Meta:
+        managed = False
+        db_table = 'algo_total'
+        unique_together = (('timestamp', 'algo'),)

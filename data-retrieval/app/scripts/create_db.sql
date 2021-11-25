@@ -167,11 +167,33 @@ END;
 $$
 LANGUAGE plpgsql;
 
+
+
+DROP PROCEDURE IF EXISTS register_algo;
+CREATE OR REPLACE PROCEDURE register_algo(
+    algo_name asset.symbol%TYPE, 
+    starting_value algo_total.total_balance%TYPE
+) 
+AS $$
+BEGIN
+    INSERT INTO algo (name) 
+    VALUES (algo_name);
+
+    INSERT INTO algo_total(timestamp, algo, total_balance)
+    VALUES (now(), algo_name, starting_value);
+
+    INSERT INTO balance(timestamp, algo, asset, balance)
+    VALUES (now(), algo_name, 'USD', starting_value);
+END;
+$$
+LANGUAGE plpgsql;
+
+
+DROP FUNCTION IF EXISTS get_total_balance;
 /* 
 
 Deprecated. Just going to store the total balance as it changes.
 
-DROP FUNCTION IF EXISTS get_total_balance;
 CREATE OR REPLACE FUNCTION get_total_balance(given_algo algo.name%TYPE, as_asset asset.symbol%TYPE, time_window INTERVAL, group_size INTEGER) RETURNS TABLE(res_timestamp TIMESTAMP, res_total_balance NUMERIC) AS $$
 
 DECLARE

@@ -16,6 +16,17 @@ class Algo(models.Model):
         db_table = 'algo'
 
 
+class AlgoTotal(models.Model):
+    timestamp = models.DateTimeField(primary_key=True)
+    algo = models.ForeignKey(Algo, models.DO_NOTHING, db_column='algo')
+    total_balance = models.DecimalField(max_digits=65535, decimal_places=65535)
+
+    class Meta:
+        managed = False
+        db_table = 'algo_total'
+        unique_together = (('timestamp', 'algo'),)
+
+
 class Asset(models.Model):
     symbol = models.TextField(primary_key=True)
     source = models.TextField()
