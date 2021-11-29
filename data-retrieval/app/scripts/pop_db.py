@@ -1,4 +1,4 @@
-import sys, os, subprocess, time, math, requests, importlib, multiprocessing
+import sys, os, subprocess, time, math, requests, importlib, multiprocessing, pytz
 import psycopg2
 import yfinance as yf
 from general_logging import print_and_log

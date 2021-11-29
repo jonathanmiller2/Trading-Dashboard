@@ -12,7 +12,7 @@ load_dotenv(verbose=True)
 ALGO_NAME = "RAND"
 
 now = datetime.now()
-if (now.hour < 13) or (now.hour == 13 and now.minute < 30) or (now.hour > 19):
+if (now.hour < 9) or (now.hour == 9 and now.minute < 30) or (now.hour > 16):
     print_and_log('ERROR: Algo %s attempted to trade outside of market hours' % ALGO_NAME)
 
 else:
@@ -29,10 +29,18 @@ else:
 
     for asset in assets:   
         cur.execute("SELECT balance FROM balance WHERE algo=%s AND asset=%s ORDER BY timestamp DESC LIMIT 1;", (ALGO_NAME, "USD"))
-        cash_balance = cur.fetchone()[0]
+        res = cur.fetchone()
+        if res is not None:
+            cash_balance = res[0]
+        else:
+            res = 0
 
         cur.execute("SELECT balance FROM balance WHERE algo=%s AND asset=%s ORDER BY timestamp DESC LIMIT 1;", (ALGO_NAME, asset))
-        asset_balance = cur.fetchone()[0]
+        res = cur.fetchone()
+        if res is not None:
+            asset_balance = res[0]
+        else:
+            res = 0
 
         cur.execute("SELECT rate FROM exchange_rate where from_asset=%s AND to_asset=%s ORDER BY timestamp DESC LIMIT 1;", ("USD", asset))
         newest_rate = cur.fetchone()[0]

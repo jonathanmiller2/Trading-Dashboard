@@ -104,7 +104,7 @@ LANGUAGE plpgsql;
 
 DROP PROCEDURE IF EXISTS update_price;
 CREATE OR REPLACE PROCEDURE update_price(
-    tick TIMESTAMP,
+    tick TIMESTAMP WITH TIME ZONE,
     given_from_asset asset.symbol%TYPE, 
     given_to_asset asset.symbol%TYPE,
     given_rate exchange_rate.rate%TYPE
@@ -130,7 +130,7 @@ BEGIN
         LOOP
             SELECT balance.balance INTO amount
             FROM balance
-            WHERE balance.asset = asset.symbol AND balance.algo = algo AND balance.timestamp <= tick
+            WHERE balance.asset = asset.symbol AND balance.algo = cur_algo.name AND balance.timestamp <= tick
             ORDER BY balance.timestamp DESC;
 
             amount := COALESCE(amount, 0);
@@ -157,11 +157,10 @@ BEGIN
             END IF;
 
             sum := sum + rate * amount;
-            RAISE NOTICE 'Tick:(%), Algo:(%), Asset:(%), Amount:(%), FBT(%), Rate:(%), Sum:(%)', tick, given_algo, asset, amount, first_balance_tick, rate, sum;
         END LOOP;
 
         INSERT INTO algo_total(timestamp, algo, total_balance)
-        VALUES (tick, algo, sum);
+        VALUES (tick, cur_algo.name, sum);
     END LOOP;
 END;
 $$
