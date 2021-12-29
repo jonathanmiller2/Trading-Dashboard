@@ -33,14 +33,14 @@ else:
         if res is not None:
             cash_balance = res[0]
         else:
-            res = 0
+            cash_balance = 0
 
         cur.execute("SELECT balance FROM balance WHERE algo=%s AND asset=%s ORDER BY timestamp DESC LIMIT 1;", (ALGO_NAME, asset))
         res = cur.fetchone()
         if res is not None:
             asset_balance = res[0]
         else:
-            res = 0
+            asset_balance = 0
 
         cur.execute("SELECT rate FROM exchange_rate where from_asset=%s AND to_asset=%s ORDER BY timestamp DESC LIMIT 1;", ("USD", asset))
         newest_rate = cur.fetchone()[0]

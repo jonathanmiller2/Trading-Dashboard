@@ -125,17 +125,11 @@
 
         // Add the valueline path.
         svg.select("#chartline")
-<<<<<<< HEAD
             .datum(data)
             .attr("fill", "none")
             .attr("stroke", "black")
             .attr("stroke-width", 3)
             .attr("clip-path", "url(#clip-1)")
-=======
-            .data([data])
-            .attr("clip-path", "url(#clip-1)")
-            .attr("class", "line")
->>>>>>> a0799a6f0cc5eb5bd9216e872f1b0e7305042370
             .attr("d", valueline(data, x));
     }
     
@@ -183,13 +177,8 @@
 
                     document.getElementById("val").innerHTML = "";
                     jsonresponse.forEach(point => {
-<<<<<<< HEAD
                         time = new Date(point[0]);
                         val = point[1];
-=======
-                        time = new Date(point.pk+'Z');
-                        val = point.fields.rate;
->>>>>>> a0799a6f0cc5eb5bd9216e872f1b0e7305042370
                         data.push({
                             date: time,
                             value: parseFloat(val)

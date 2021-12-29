@@ -5,6 +5,7 @@ from django.shortcuts import render
 from django.db import IntegrityError, connection
 from django.contrib.auth.decorators import login_required
 from .models import Algo, TradesOn, Asset, Balance, AlgoTotal
+from datetime import datetime, timedelta
 
 import json
 import pandas as pd
@@ -95,7 +96,7 @@ def details(request):
 def get_balance_record(request):
     algo = request.GET['algo']
     period_hours = int(request.GET['period'])
-    balances = list(AlgoTotal.objects.filter(algo=algo).values_list('timestamp', 'total_balance'))
+    balances = list(AlgoTotal.objects.filter(timestamp__lte=datetime.now(), timestamp__gt=datetime.now()-timedelta(hours=period_hours), algo=algo).values_list('timestamp', 'total_balance'))
 
     if len(balances) == 0:
         return HttpResponse('[]')

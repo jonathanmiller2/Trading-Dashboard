@@ -76,7 +76,16 @@ DECLARE
 
 BEGIN
     SELECT COALESCE(balance.balance, 0) INTO old_from_asset_balance FROM balance WHERE balance.algo = given_algo AND balance.asset = given_from_asset ORDER BY balance.timestamp DESC;
+    IF old_from_asset_balance IS NULL
+    THEN
+        old_from_asset_balance := 0;
+    END IF;
+
     SELECT COALESCE(balance.balance, 0) INTO old_to_asset_balance FROM balance WHERE balance.algo = given_algo AND balance.asset = given_to_asset ORDER BY balance.timestamp DESC;
+    IF old_to_asset_balance IS NULL
+    THEN
+        old_to_asset_balance := 0;
+    END IF;
 
     SELECT exchange_rate.rate INTO newest_rate FROM exchange_rate WHERE exchange_rate.from_asset = given_from_asset AND exchange_rate.to_asset = given_to_asset ORDER BY exchange_rate.timestamp DESC;
     IF newest_rate IS NULL
@@ -87,6 +96,8 @@ BEGIN
 
     INSERT INTO trade (timestamp, algo, from_asset, to_asset, amount)
     VALUES (tick, given_algo, given_from_asset, given_to_asset, amount_bought);
+
+    /*RAISE EXCEPTION '(%)(%)(%)(%)', old_from_asset_balance, old_to_asset_balance, amount_bought, newest_rate; */
 
     new_from_asset_balance := ROUND(old_from_asset_balance - amount_bought * newest_rate, 10);
     new_to_asset_balance := ROUND(old_to_asset_balance + amount_bought, 10);
@@ -136,20 +147,20 @@ BEGIN
             amount := COALESCE(amount, 0);
             CONTINUE WHEN amount = 0;
 
-            IF asset.symbol = 'USD' OR asset.symbol = 'usd'
+            IF asset.symbol = 'USD'
             THEN
                 rate := 1;
             ELSE
                 SELECT exchange_rate.rate INTO rate
                 FROM exchange_rate
-                WHERE exchange_rate.from_asset = as_asset AND exchange_rate.to_asset = asset.symbol AND exchange_rate.timestamp <= tick
+                WHERE exchange_rate.from_asset = 'USD' AND exchange_rate.to_asset = asset.symbol AND exchange_rate.timestamp <= tick
                 ORDER BY exchange_rate.timestamp DESC;
 
                 IF rate IS NULL
                 THEN
                     SELECT exchange_rate.rate INTO rate
                     FROM exchange_rate
-                    WHERE exchange_rate.from_asset = asset.symbol AND exchange_rate.to_asset = as_asset AND exchange_rate.timestamp <= tick
+                    WHERE exchange_rate.from_asset = asset.symbol AND exchange_rate.to_asset = 'USD' AND exchange_rate.timestamp <= tick
                     ORDER BY exchange_rate.timestamp DESC;
 
                     rate := 1 / rate;
